@@ -2,7 +2,6 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { api } from "@/lib/api/backend";
 import { useProfile, type ChatMessage } from "@/lib/store";
-import { CompanyLogo } from "@/components/CompanyLogo";
 import {
   ArrowLeft, Send, Sparkles, Mail, TrendingUp, Users,
   ExternalLink, Building2, Handshake, Activity, Info, MessageSquare,
@@ -158,15 +157,11 @@ function CompanyPage() {
         <div className="px-6 pb-6 pt-5">
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div className="flex items-end gap-4">
-              <div className="-mt-12 rounded-xl border-4 border-card shadow-elegant">
-                <CompanyLogo
-                  website={company.website}
-                  name={company.name}
-                  fallbackLetter={company.logo}
-                  fallbackColor={company.color}
-                  size={80}
-                  className="rounded-lg"
-                />
+              <div
+                className="-mt-12 grid h-20 w-20 place-items-center rounded-xl border-4 border-card font-display text-3xl font-bold text-primary-foreground shadow-elegant"
+                style={{ background: company.color }}
+              >
+                {company.logo}
               </div>
               <div>
                 <h1 className="font-display text-3xl font-bold tracking-tight md:text-4xl">{company.name}</h1>
