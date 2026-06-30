@@ -51,7 +51,7 @@ function HomePage() {
           tone="dark"
           eyebrow="01 · Conversational"
           icon={Sparkles}
-          title="Chat with the Merantix Analyst"
+          title="Merantix AI Analyst: Laura"
           body="Ask anything — a Merantix company, a sector, or a wider market question. Email yourself the summary."
         />
         <FunnelCard

@@ -8,7 +8,7 @@ import { api } from "@/lib/api/backend";
 export const Route = createFileRoute("/_app/chat")({
   head: () => ({
     meta: [
-      { title: "AI Analyst — Merantix Portfolio Portal" },
+      { title: "Laura — Merantix AI Analyst" },
       { name: "description", content: "Ask anything — portfolio, market, or general research." },
     ],
   }),
@@ -90,7 +90,7 @@ function ChatPage() {
       {/* Header */}
       <div className="mb-4 flex items-center justify-between gap-4">
         <div>
-          <h1 className="font-display text-2xl font-bold tracking-tight">AI Analyst</h1>
+          <h1 className="font-display text-2xl font-bold tracking-tight">Merantix AI Analyst: Laura</h1>
           <p className="text-xs text-muted-foreground">Ask anything — a company, a sector, or general research.</p>
         </div>
         <button onClick={endAndEmail}

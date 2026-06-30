@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api/backend";
 import { sectorSlug } from "./portfolio.index";
+import { CompanyLogo } from "@/components/CompanyLogo";
 import { ArrowLeft, ArrowUpRight, Search } from "lucide-react";
 
 export const Route = createFileRoute("/_app/portfolio/$sector")({
@@ -22,6 +23,7 @@ type SectorCompany = {
   status: string;
   logo: string;
   color: string;
+  website: string;
 };
 
 type SectorResponse = {
@@ -132,9 +134,13 @@ function SectorDetail() {
               <Link key={c.id} to="/company/$companyId" params={{ companyId: c.id }}
                 className="group relative overflow-hidden rounded-2xl border border-border bg-card p-5 transition hover:border-foreground/30 hover:shadow-elegant">
                 <div className="flex items-start justify-between gap-3">
-                  <div className="grid h-11 w-11 place-items-center rounded-lg font-display text-lg font-bold text-primary-foreground" style={{ background: c.color }}>
-                    {c.logo}
-                  </div>
+                  <CompanyLogo
+                    website={c.website}
+                    name={c.name}
+                    fallbackLetter={c.logo}
+                    fallbackColor={c.color}
+                    size={44}
+                  />
                   <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${
                     c.status === "Active" ? "bg-highlight text-highlight-foreground" :
                     c.status === "Exited" ? "bg-primary text-primary-foreground" :
