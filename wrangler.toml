@@ -1,0 +1,21 @@
+name = "portfolio-insight-hub"
+main = ".output/server/index.mjs"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+
+# Static assets (JS, CSS, fonts) built by Vite
+[assets]
+directory = ".output/public"
+binding = "ASSETS"
+
+# Runtime environment variables.
+# VITE_API_URL is also inlined at build time (VITE_ prefix), but setting it
+# here ensures the server-side proxy in src/lib/api/backend.functions.ts
+# reads the correct Railway URL at request time on Cloudflare Workers.
+[vars]
+VITE_API_URL = "https://intelligent-platform-production.up.railway.app"
+
+# Uncomment and set via `wrangler secret put BACKEND_API_KEY` if your Railway
+# backend requires an Authorization header:
+# [secrets]
+# BACKEND_API_KEY = ""
