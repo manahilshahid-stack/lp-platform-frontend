@@ -138,10 +138,10 @@ function CompanyPage() {
     <div className="mx-auto max-w-7xl px-6 py-8">
       <div className="mb-6 flex items-center justify-between gap-3">
         <button
-          onClick={() => navigate({ to: "/portfolio" })}
+          onClick={() => window.history.back()}
           className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground transition hover:text-foreground"
         >
-          <ArrowLeft className="h-3.5 w-3.5" /> Back to portfolio
+          <ArrowLeft className="h-3.5 w-3.5" /> Back
         </button>
         <Link
           to="/chat"
