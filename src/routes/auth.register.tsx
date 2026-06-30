@@ -69,10 +69,12 @@ function RegisterPage() {
       navigate({ to: "/onboarding" });
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
-      if (msg.includes("400")) {
-        setError(msg.replace(/^Backend \d+: /, "").replace(/^"/, "").replace(/"$/, ""));
-      } else {
-        setError("Something went wrong, please try again.");
+      const raw = msg.replace(/^Backend \d+:\s*/, "");
+      try {
+        const parsed = JSON.parse(raw);
+        setError(parsed.detail ?? raw);
+      } catch {
+        setError(raw || "Something went wrong, please try again.");
       }
     } finally {
       setLoading(false);

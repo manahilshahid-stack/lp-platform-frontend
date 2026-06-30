@@ -2,6 +2,7 @@ import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { CATEGORIES } from "@/lib/mockData";
 import { loadProfile, saveProfile } from "@/lib/store";
+import { api } from "@/lib/api/backend";
 import { Check, ArrowRight, ArrowLeft, SkipForward } from "lucide-react";
 import { Logo } from "@/components/Logo";
 
@@ -34,11 +35,21 @@ function Onboarding() {
 
   const finish = () => {
     saveProfile({ ...profile, interests, lookingFor, bio, onboarded: true });
+    api("/api/lp/me", {
+      method: "PUT",
+      body: {
+        interest_areas: interests,
+        looking_for: lookingFor ? [lookingFor] : [],
+        about_yourself: bio,
+        onboarding_completed: true,
+      },
+    }).catch(console.error);
     navigate({ to: "/home" });
   };
 
   const skip = () => {
     saveProfile({ ...profile, onboarded: true });
+    api("/api/lp/me", { method: "PUT", body: { onboarding_completed: true } }).catch(console.error);
     navigate({ to: "/home" });
   };
 
