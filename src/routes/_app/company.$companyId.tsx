@@ -80,7 +80,7 @@ function CompanyPage() {
     try {
       const res = await api<{ ok: boolean; session_id: string; reply: string }>("/api/lp/chat", {
         method: "POST",
-        body: { message: text, session_id: sessionId },
+        body: { message: text, session_id: sessionId, company_name: company.name },
       });
       setSessionId(res.session_id);
       setMessages([...next, { role: "assistant", content: res.reply, ts: Date.now() }]);
