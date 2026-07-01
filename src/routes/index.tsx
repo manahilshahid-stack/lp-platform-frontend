@@ -1,9 +1,18 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { loadProfile } from "@/lib/store";
-import { COMPANIES } from "@/lib/mockData";
+import { api } from "@/lib/api/backend";
 import { ArrowRight, ArrowUpRight, Mail, MessageSquare, LayoutGrid, ShieldCheck } from "lucide-react";
 import { Logo } from "@/components/Logo";
+
+type PublicCompany = { name: string; sector: string };
+
+const COLORS = [
+  "oklch(0.92 0.25 120)",
+  "oklch(0.72 0.21 55)",
+  "oklch(0.18 0.01 60)",
+  "oklch(0.65 0.12 85)",
+];
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -17,15 +26,21 @@ export const Route = createFileRoute("/")({
 
 function LPLanding() {
   const navigate = useNavigate();
+  const [companies, setCompanies] = useState<PublicCompany[]>([]);
 
   useEffect(() => {
     const p = loadProfile();
     if (p?.onboarded) navigate({ to: "/home" });
   }, [navigate]);
 
-  const active = COMPANIES.filter((c) => c.status === "Active");
-  const rowA = [...active, ...active];
-  const rowB = [...active.slice().reverse(), ...active];
+  useEffect(() => {
+    api<PublicCompany[]>("/api/lp/public/companies", { auth: false })
+      .then(setCompanies)
+      .catch(() => setCompanies([]));
+  }, []);
+
+  const rowA = [...companies, ...companies];
+  const rowB = [...companies.slice().reverse(), ...companies];
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-background text-foreground">
@@ -124,7 +139,7 @@ function LPLanding() {
 
             <div className="absolute -left-6 -bottom-6 hidden rounded-2xl border border-foreground/10 bg-card px-4 py-3 shadow-elegant md:block">
               <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Portfolio companies</div>
-              <div className="mt-1 font-display text-2xl font-bold">{active.length}<span className="text-accent">.</span></div>
+              <div className="mt-1 font-display text-2xl font-bold">{companies.length}<span className="text-accent">.</span></div>
             </div>
           </div>
         </div>
@@ -195,15 +210,15 @@ function LPLanding() {
   );
 }
 
-function Marquee({ items, reverse }: { items: typeof COMPANIES; reverse?: boolean }) {
+function Marquee({ items, reverse }: { items: PublicCompany[]; reverse?: boolean }) {
   return (
     <div className="relative overflow-hidden">
       <div className={`flex w-max gap-2 whitespace-nowrap ${reverse ? "animate-marquee-rev" : "animate-marquee"}`} style={{ animationDuration: "55s" }}>
         {items.map((c, i) => (
-          <span key={`${c.id}-${i}`} className="inline-flex items-center gap-2 rounded-full border border-foreground/10 bg-background px-3.5 py-1.5 text-[12px] font-medium">
-            <span className="h-2 w-2 rounded-full" style={{ background: c.color }} />
+          <span key={`${c.name}-${i}`} className="inline-flex items-center gap-2 rounded-full border border-foreground/10 bg-background px-3.5 py-1.5 text-[12px] font-medium">
+            <span className="h-2 w-2 rounded-full" style={{ background: COLORS[i % COLORS.length] }} />
             {c.name}
-            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">· {c.category}</span>
+            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">· {c.sector}</span>
           </span>
         ))}
       </div>
