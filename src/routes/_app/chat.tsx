@@ -1,7 +1,7 @@
-import { createFileRoute, useSearch } from "@tanstack/react-router";
+import { createFileRoute, useSearch, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useProfile, type ChatMessage } from "@/lib/store";
-import { Send, Mail } from "lucide-react";
+import { Send, Mail, SquarePen } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "@/lib/api/backend";
 
@@ -29,6 +29,7 @@ type SessionResponse = {
 
 function ChatPage() {
   const profile = useProfile();
+  const navigate = useNavigate();
   const rawSearch = useSearch({ strict: false }) as Record<string, unknown>;
   const sessionParam = typeof rawSearch?.session === "string" ? rawSearch.session : undefined;
 
@@ -114,10 +115,19 @@ function ChatPage() {
             {sessionParam ? "Continuing a previous conversation." : "Ask anything — a company, a sector, or general research."}
           </p>
         </div>
-        <button onClick={endAndEmail}
-          className="flex items-center gap-1.5 rounded-full bg-primary px-3.5 py-2 text-xs font-semibold text-primary-foreground transition hover:opacity-90">
-          <Mail className="h-3 w-3" /> End &amp; email summary
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => navigate({ to: "/chat" })}
+            className="flex items-center gap-1.5 rounded-full border border-border bg-card px-3.5 py-2 text-xs font-semibold transition hover:border-foreground/30"
+            title="New chat"
+          >
+            <SquarePen className="h-3 w-3" /> New chat
+          </button>
+          <button onClick={endAndEmail}
+            className="flex items-center gap-1.5 rounded-full bg-primary px-3.5 py-2 text-xs font-semibold text-primary-foreground transition hover:opacity-90">
+            <Mail className="h-3 w-3" /> End &amp; email summary
+          </button>
+        </div>
       </div>
 
       {/* Messages */}
