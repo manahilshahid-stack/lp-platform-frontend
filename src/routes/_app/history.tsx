@@ -57,7 +57,7 @@ function HistoryPage() {
         )}
 
         {!loading && sessions.map((s) => (
-          <Link key={s.id} to="/chat"
+          <Link key={s.id} to="/chat" search={{ session: s.id }}
             className="group flex items-center gap-4 rounded-2xl border border-border bg-card p-4 transition hover:border-foreground/30">
             <div className="grid h-12 w-12 place-items-center rounded-lg font-display font-bold text-primary-foreground"
               style={{ background: "var(--color-primary)" }}>✦</div>

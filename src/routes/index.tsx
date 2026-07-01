@@ -145,12 +145,14 @@ function LPLanding() {
         </div>
       </section>
 
-      {/* Marquee */}
-      <section className="relative z-10 border-y border-foreground/10 bg-card/40 py-6 backdrop-blur">
-        <Marquee items={rowA} />
-        <div className="h-3" />
-        <Marquee items={rowB} reverse />
-      </section>
+      {/* Marquee — only render once data has loaded so animation starts fresh */}
+      {companies.length > 0 && (
+        <section className="relative z-10 border-y border-foreground/10 bg-card/40 py-6 backdrop-blur">
+          <Marquee key={`a-${companies.length}`} items={rowA} />
+          <div className="h-3" />
+          <Marquee key={`b-${companies.length}`} items={rowB} reverse />
+        </section>
+      )}
 
       {/* Features */}
       <section className="relative z-10 mx-auto max-w-7xl px-6 py-20">
