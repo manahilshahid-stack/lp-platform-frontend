@@ -1,5 +1,3 @@
-import logoAsset from "@/assets/merantix-logo.png.asset.json";
-
 type Props = {
   size?: number;
   showWordmark?: boolean;
@@ -11,12 +9,12 @@ export function Logo({ size = 36, showWordmark = true, subtitle = "LP Portal", c
   return (
     <div className={`flex items-center gap-2.5 ${className}`}>
       <img
-        src={logoAsset.url}
+        src="/merantix-logo.png"
         alt="Merantix Capital"
         width={size}
         height={size}
         style={{ width: size, height: size }}
-        className="object-contain"
+        className="object-contain rounded-sm"
       />
       {showWordmark && (
         <div className="leading-tight">
