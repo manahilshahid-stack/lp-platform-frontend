@@ -198,17 +198,81 @@ function ChatPage() {
   );
 }
 
-function FormattedText({ text }: { text: string }) {
-  const parts = text.split(/\n/).map((line, i) => {
-    const bullet = line.trim().startsWith("- ");
-    const inner = (bullet ? line.trim().slice(2) : line).split(/(\*\*[^*]+\*\*|\*[^*]+\*)/).map((seg, j) => {
-      if (seg.startsWith("**") && seg.endsWith("**")) return <strong key={j}>{seg.slice(2, -2)}</strong>;
-      if (seg.startsWith("*") && seg.endsWith("*")) return <em key={j}>{seg.slice(1, -1)}</em>;
-      return <span key={j}>{seg}</span>;
-    });
-    return bullet
-      ? <li key={i} className="ml-4 list-disc">{inner}</li>
-      : <p key={i} className="empty:hidden">{inner}</p>;
+function inlineFormat(text: string) {
+  return text.split(/(\*\*[^*]+\*\*|`[^`]+`|\*[^*]+\*)/).map((seg, j) => {
+    if (seg.startsWith("**") && seg.endsWith("**")) return <strong key={j}>{seg.slice(2, -2)}</strong>;
+    if (seg.startsWith("`") && seg.endsWith("`")) return <code key={j} className="rounded bg-border/60 px-1 py-0.5 font-mono text-xs">{seg.slice(1, -1)}</code>;
+    if (seg.startsWith("*") && seg.endsWith("*")) return <em key={j}>{seg.slice(1, -1)}</em>;
+    return <span key={j}>{seg}</span>;
   });
-  return <div className="space-y-1.5">{parts}</div>;
+}
+
+function FormattedText({ text }: { text: string }) {
+  const lines = text.split(/\n/);
+  const output: React.ReactNode[] = [];
+  let i = 0;
+
+  while (i < lines.length) {
+    const line = lines[i];
+    const trimmed = line.trim();
+
+    // Markdown table — collect all consecutive pipe lines
+    if (trimmed.startsWith("|") && trimmed.endsWith("|")) {
+      const tableLines: string[] = [];
+      while (i < lines.length && lines[i].trim().startsWith("|")) {
+        tableLines.push(lines[i].trim());
+        i++;
+      }
+      // Parse: first row = header, second row = separator, rest = body
+      const rows = tableLines.filter(r => !r.match(/^\|[-| :]+\|$/));
+      const parseRow = (r: string) => r.slice(1, -1).split("|").map(c => c.trim());
+      const [header, ...body] = rows;
+      output.push(
+        <div key={`table-${i}`} className="my-3 overflow-x-auto rounded-lg border border-border">
+          <table className="w-full text-xs">
+            <thead className="bg-secondary">
+              <tr>
+                {parseRow(header).map((cell, ci) => (
+                  <th key={ci} className="border-b border-border px-3 py-2 text-left font-semibold text-foreground">
+                    {inlineFormat(cell)}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {body.map((row, ri) => (
+                <tr key={ri} className={ri % 2 === 0 ? "bg-background" : "bg-secondary/40"}>
+                  {parseRow(row).map((cell, ci) => (
+                    <td key={ci} className="border-b border-border/50 px-3 py-2 text-foreground/90">
+                      {inlineFormat(cell)}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      );
+      continue;
+    }
+
+    // Heading: ## or ###
+    if (trimmed.startsWith("### ")) {
+      output.push(<h4 key={i} className="mt-3 mb-1 font-display text-sm font-bold tracking-tight">{inlineFormat(trimmed.slice(4))}</h4>);
+    } else if (trimmed.startsWith("## ")) {
+      output.push(<h3 key={i} className="mt-4 mb-1 font-display text-base font-bold tracking-tight">{inlineFormat(trimmed.slice(3))}</h3>);
+    } else if (trimmed.startsWith("**") && trimmed.endsWith("**") && !trimmed.slice(2, -2).includes("**")) {
+      // Standalone bold line = section heading
+      output.push(<p key={i} className="mt-3 mb-0.5 font-semibold">{trimmed.slice(2, -2)}</p>);
+    } else if (trimmed.startsWith("- ") || trimmed.startsWith("* ")) {
+      output.push(<li key={i} className="ml-4 list-disc">{inlineFormat(trimmed.slice(2))}</li>);
+    } else if (trimmed === "") {
+      output.push(<div key={i} className="h-2" />);
+    } else {
+      output.push(<p key={i} className="leading-relaxed">{inlineFormat(trimmed)}</p>);
+    }
+    i++;
+  }
+
+  return <div className="space-y-1">{output}</div>;
 }
