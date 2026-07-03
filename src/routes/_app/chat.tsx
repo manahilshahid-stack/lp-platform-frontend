@@ -86,6 +86,10 @@ function ChatPage() {
         method: "POST",
         body: { message: text, session_id: currentSessionId },
       });
+      // Pin session ID in URL so refresh restores this conversation
+      if (!sessionParam && res.session_id) {
+        window.history.replaceState({}, "", `/chat?session=${res.session_id}`);
+      }
       setCurrentSessionId(res.session_id);
       reply = res.reply;
     } catch (err) {
