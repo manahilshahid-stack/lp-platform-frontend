@@ -43,6 +43,7 @@ function ChatPage() {
   const [input, setInput] = useState("");
   const [thinking, setThinking] = useState(false);
   const [streamingText, setStreamingText] = useState("");
+  const [statusText, setStatusText] = useState("");
   const scroller = useRef<HTMLDivElement>(null);
 
   // Load existing session if coming from history
@@ -82,6 +83,7 @@ function ChatPage() {
     setInput("");
     setThinking(true);
     setStreamingText("");
+    setStatusText("");
 
     let accumulated = "";
     try {
@@ -91,7 +93,10 @@ function ChatPage() {
           if (!sessionParam) {
             window.history.replaceState({}, "", `/chat?session=${event.session_id}`);
           }
+        } else if (event.type === "status") {
+          setStatusText(event.text);
         } else if (event.type === "token") {
+          setStatusText("");
           accumulated += event.text;
           setStreamingText(accumulated);
         } else if (event.type === "done") {
@@ -104,6 +109,7 @@ function ChatPage() {
 
     setMessages([...next, { role: "assistant", content: accumulated, ts: Date.now() }]);
     setStreamingText("");
+    setStatusText("");
     setThinking(false);
   };
 
@@ -167,10 +173,16 @@ function ChatPage() {
             {thinking && !streamingText && (
               <div className="flex gap-3">
                 <div className="grid h-8 w-8 place-items-center rounded-lg border border-border bg-background text-xs">✦</div>
-                <div className="flex items-center gap-1 rounded-2xl bg-secondary px-4 py-3">
-                  <span className="h-1.5 w-1.5 rounded-full bg-foreground/60 pulse-dot" />
-                  <span className="h-1.5 w-1.5 rounded-full bg-foreground/60 pulse-dot" style={{ animationDelay: "0.2s" }} />
-                  <span className="h-1.5 w-1.5 rounded-full bg-foreground/60 pulse-dot" style={{ animationDelay: "0.4s" }} />
+                <div className="flex items-center gap-2 rounded-2xl bg-secondary px-4 py-3">
+                  {statusText ? (
+                    <span className="text-xs text-muted-foreground italic">{statusText}</span>
+                  ) : (
+                    <>
+                      <span className="h-1.5 w-1.5 rounded-full bg-foreground/60 pulse-dot" />
+                      <span className="h-1.5 w-1.5 rounded-full bg-foreground/60 pulse-dot" style={{ animationDelay: "0.2s" }} />
+                      <span className="h-1.5 w-1.5 rounded-full bg-foreground/60 pulse-dot" style={{ animationDelay: "0.4s" }} />
+                    </>
+                  )}
                 </div>
               </div>
             )}

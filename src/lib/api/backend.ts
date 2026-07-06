@@ -31,6 +31,7 @@ export async function api<T = unknown>(
 
 export type StreamEvent =
   | { type: "session"; session_id: string }
+  | { type: "status"; text: string }
   | { type: "token"; text: string }
   | { type: "done" };
 
