@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useProfile, type ChatMessage } from "@/lib/store";
 import { Send, Mail, SquarePen } from "lucide-react";
 import { toast } from "sonner";
-import { api } from "@/lib/api/backend";
+import { api, streamChat } from "@/lib/api/backend";
 
 export const Route = createFileRoute("/_app/chat")({
   head: () => ({
@@ -42,6 +42,7 @@ function ChatPage() {
   const [loadingSession, setLoadingSession] = useState(!!sessionParam);
   const [input, setInput] = useState("");
   const [thinking, setThinking] = useState(false);
+  const [streamingText, setStreamingText] = useState("");
   const scroller = useRef<HTMLDivElement>(null);
 
   // Load existing session if coming from history
@@ -80,22 +81,29 @@ function ChatPage() {
     setMessages(next);
     setInput("");
     setThinking(true);
-    let reply = "";
+    setStreamingText("");
+
+    let accumulated = "";
     try {
-      const res = await api<{ ok: boolean; session_id: string; reply: string; citations: any[] }>("/api/lp/chat", {
-        method: "POST",
-        body: { message: text, session_id: currentSessionId },
-      });
-      // Pin session ID in URL so refresh restores this conversation
-      if (!sessionParam && res.session_id) {
-        window.history.replaceState({}, "", `/chat?session=${res.session_id}`);
+      for await (const event of streamChat(text, currentSessionId)) {
+        if (event.type === "session") {
+          setCurrentSessionId(event.session_id);
+          if (!sessionParam) {
+            window.history.replaceState({}, "", `/chat?session=${event.session_id}`);
+          }
+        } else if (event.type === "token") {
+          accumulated += event.text;
+          setStreamingText(accumulated);
+        } else if (event.type === "done") {
+          break;
+        }
       }
-      setCurrentSessionId(res.session_id);
-      reply = res.reply;
     } catch (err) {
-      reply = `⚠️ Backend error: ${err instanceof Error ? err.message : String(err)}`;
+      accumulated = accumulated || `⚠️ Error: ${err instanceof Error ? err.message : String(err)}`;
     }
-    setMessages([...next, { role: "assistant", content: reply, ts: Date.now() }]);
+
+    setMessages([...next, { role: "assistant", content: accumulated, ts: Date.now() }]);
+    setStreamingText("");
     setThinking(false);
   };
 
@@ -156,13 +164,22 @@ function ChatPage() {
                 </div>
               </div>
             ))}
-            {thinking && (
+            {thinking && !streamingText && (
               <div className="flex gap-3">
                 <div className="grid h-8 w-8 place-items-center rounded-lg border border-border bg-background text-xs">✦</div>
                 <div className="flex items-center gap-1 rounded-2xl bg-secondary px-4 py-3">
                   <span className="h-1.5 w-1.5 rounded-full bg-foreground/60 pulse-dot" />
                   <span className="h-1.5 w-1.5 rounded-full bg-foreground/60 pulse-dot" style={{ animationDelay: "0.2s" }} />
                   <span className="h-1.5 w-1.5 rounded-full bg-foreground/60 pulse-dot" style={{ animationDelay: "0.4s" }} />
+                </div>
+              </div>
+            )}
+            {thinking && streamingText && (
+              <div className="flex gap-3">
+                <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-border bg-background text-xs">✦</div>
+                <div className="max-w-[80%] rounded-2xl bg-secondary px-4 py-3 text-sm leading-relaxed">
+                  <FormattedText text={streamingText} />
+                  <span className="ml-0.5 inline-block h-4 w-0.5 animate-pulse bg-foreground/60" />
                 </div>
               </div>
             )}

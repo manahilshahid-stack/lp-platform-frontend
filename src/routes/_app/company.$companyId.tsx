@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { api } from "@/lib/api/backend";
+import { api, streamChat } from "@/lib/api/backend";
 import { useProfile, type ChatMessage } from "@/lib/store";
 import {
   ArrowLeft, Send, Sparkles, Mail, TrendingUp, Users,
@@ -53,6 +53,7 @@ function CompanyPage() {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [input, setInput] = useState("");
   const [thinking, setThinking] = useState(false);
+  const [streamingText, setStreamingText] = useState("");
   const scroller = useRef<HTMLDivElement>(null);
 
   // Reset chat when company loads
@@ -77,18 +78,23 @@ function CompanyPage() {
     setMessages(next);
     setInput("");
     setThinking(true);
+    setStreamingText("");
+
+    let accumulated = "";
     try {
-      const res = await api<{ ok: boolean; session_id: string; reply: string }>("/api/lp/chat", {
-        method: "POST",
-        body: { message: text, session_id: sessionId, company_name: company.name },
-      });
-      setSessionId(res.session_id);
-      setMessages([...next, { role: "assistant", content: res.reply, ts: Date.now() }]);
+      for await (const event of streamChat(text, sessionId, company.name)) {
+        if (event.type === "session") setSessionId(event.session_id);
+        else if (event.type === "token") {
+          accumulated += event.text;
+          setStreamingText(accumulated);
+        } else if (event.type === "done") break;
+      }
     } catch {
-      setMessages([...next, { role: "assistant", content: "⚠️ Could not reach the AI analyst. Please try again.", ts: Date.now() }]);
-    } finally {
-      setThinking(false);
+      accumulated = accumulated || "⚠️ Could not reach the AI analyst. Please try again.";
     }
+    setMessages([...next, { role: "assistant", content: accumulated, ts: Date.now() }]);
+    setStreamingText("");
+    setThinking(false);
   };
 
   const emailSummary = () => {
@@ -257,13 +263,22 @@ function CompanyPage() {
                   </div>
                 </div>
               ))}
-              {thinking && (
+              {thinking && !streamingText && (
                 <div className="flex gap-2.5">
                   <div className="grid h-7 w-7 place-items-center rounded-lg border border-border bg-background text-xs">✦</div>
                   <div className="flex items-center gap-1 rounded-2xl bg-secondary px-3.5 py-2.5">
                     <span className="h-1.5 w-1.5 rounded-full bg-foreground/60 pulse-dot" />
                     <span className="h-1.5 w-1.5 rounded-full bg-foreground/60 pulse-dot" style={{ animationDelay: "0.2s" }} />
                     <span className="h-1.5 w-1.5 rounded-full bg-foreground/60 pulse-dot" style={{ animationDelay: "0.4s" }} />
+                  </div>
+                </div>
+              )}
+              {thinking && streamingText && (
+                <div className="flex gap-2.5">
+                  <div className="grid h-7 w-7 shrink-0 place-items-center rounded-lg border border-border bg-background text-xs">✦</div>
+                  <div className="max-w-[82%] rounded-2xl bg-secondary px-3.5 py-2.5 text-sm leading-relaxed">
+                    <FormattedText text={streamingText} />
+                    <span className="ml-0.5 inline-block h-3.5 w-0.5 animate-pulse bg-foreground/60" />
                   </div>
                 </div>
               )}
