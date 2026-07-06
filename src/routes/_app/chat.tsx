@@ -33,24 +33,27 @@ function ChatPage() {
   const rawSearch = useSearch({ strict: false }) as Record<string, unknown>;
   const sessionParam = typeof rawSearch?.session === "string" ? rawSearch.session : undefined;
 
-  const [currentSessionId, setCurrentSessionId] = useState<string | null>(sessionParam ?? null);
+  const LAST_SESSION_KEY = "mx_last_chat_session";
+  const sessionToLoad = sessionParam ?? (typeof window !== "undefined" ? localStorage.getItem(LAST_SESSION_KEY) : null);
+
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>(sessionToLoad);
   const [messages, setMessages] = useState<ChatMessage[]>([{
     role: "assistant",
     ts: Date.now(),
     content: `Hi${profile?.name ? " " + profile.name.split(" ")[0] : ""} — ask me anything. When you're done, hit *End & email summary* and the key insights go to ${profile?.email ?? "your inbox"}.`,
   }]);
-  const [loadingSession, setLoadingSession] = useState(!!sessionParam);
+  const [loadingSession, setLoadingSession] = useState(!!sessionToLoad);
   const [input, setInput] = useState("");
   const [thinking, setThinking] = useState(false);
   const [streamingText, setStreamingText] = useState("");
   const [statusText, setStatusText] = useState("");
   const scroller = useRef<HTMLDivElement>(null);
 
-  // Load existing session if coming from history
+  // Load last active session on mount (from URL param or localStorage)
   useEffect(() => {
-    if (!sessionParam) return;
+    if (!sessionToLoad) return;
     setLoadingSession(true);
-    api<SessionResponse>(`/api/lp/chat/sessions/${sessionParam}`)
+    api<SessionResponse>(`/api/lp/chat/sessions/${sessionToLoad}`)
       .then((data) => {
         if (data.messages.length > 0) {
           setMessages(data.messages.map((m) => ({
@@ -59,11 +62,12 @@ function ChatPage() {
             ts: m.ts,
           })));
           setCurrentSessionId(data.id);
+          localStorage.setItem(LAST_SESSION_KEY, data.id);
         }
       })
-      .catch(console.error)
+      .catch(() => localStorage.removeItem(LAST_SESSION_KEY))
       .finally(() => setLoadingSession(false));
-  }, [sessionParam]);
+  }, []);
 
   useEffect(() => {
     scroller.current?.scrollTo({ top: scroller.current.scrollHeight, behavior: "smooth" });
@@ -90,9 +94,8 @@ function ChatPage() {
       for await (const event of streamChat(text, currentSessionId)) {
         if (event.type === "session") {
           setCurrentSessionId(event.session_id);
-          if (!sessionParam) {
-            window.history.replaceState({}, "", `/chat?session=${event.session_id}`);
-          }
+          localStorage.setItem(LAST_SESSION_KEY, event.session_id);
+          window.history.replaceState({}, "", `/chat?session=${event.session_id}`);
         } else if (event.type === "status") {
           setStatusText(event.text);
         } else if (event.type === "token") {
@@ -135,7 +138,7 @@ function ChatPage() {
         </div>
         <div className="flex items-center gap-2">
           <button
-            onClick={() => navigate({ to: "/chat" })}
+            onClick={() => { localStorage.removeItem(LAST_SESSION_KEY); navigate({ to: "/chat" }); }}
             className="flex items-center gap-1.5 rounded-full border border-border bg-card px-3.5 py-2 text-xs font-semibold transition hover:border-foreground/30"
             title="New chat"
           >
