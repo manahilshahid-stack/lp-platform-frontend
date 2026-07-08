@@ -62,7 +62,7 @@ function CompanyPage() {
     setMessages([{
       role: "assistant",
       ts: Date.now(),
-      content: `Hi${profile?.name ? " " + profile.name.split(" ")[0] : ""} — ask me anything about **${company.name}**.`,
+      content: `Hi${profile?.name ? " " + profile.name.split(" ")[0] : ""} — I'm focused exclusively on **${company.name}**. Ask me about their product, market, differentiation, or thesis. For broader portfolio questions, use the main AI Analyst.`,
     }]);
     setSessionId(null);
   }, [company?.id]);
@@ -138,7 +138,12 @@ function CompanyPage() {
     `Deepening partnerships and research collaborations within the Merantix AI Campus`,
   ];
   const websiteUrl = company.website && company.website !== "tbd" ? `https://${company.website}` : null;
-  const suggestedPrompts = ["What does this company do?", "Who founded it?", "How is it differentiated?"];
+  const suggestedPrompts = [
+    `What does ${company.name} do?`,
+    `What makes ${company.name} differentiated?`,
+    `What is ${company.name}'s market opportunity?`,
+    `What stage is ${company.name} at?`,
+  ];
 
   return (
     <div className="mx-auto max-w-7xl px-6 py-8">
