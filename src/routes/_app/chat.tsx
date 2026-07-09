@@ -116,14 +116,20 @@ function ChatPage() {
     setThinking(false);
   };
 
-  const endAndEmail = () => {
+  const [emailing, setEmailing] = useState(false);
+
+  const endAndEmail = async () => {
     if (messages.length <= 1) {
       toast.info("Ask at least one question before generating a summary.");
       return;
     }
-    toast.success(`Summary emailed to ${profile?.email}`, {
-      description: `Key insights from your session on "${topic}" are on their way.`,
-    });
+    if (!currentSessionId) { toast.error('No active session to summarise.'); return; }
+    setEmailing(true);
+    try {
+      await api(`/api/lp/chat/sessions/${currentSessionId}/email-summary`, { method: 'POST' });
+      toast.success(`Summary emailed to ${profile?.email}`, { description: 'Key insights from your session are on their way.' });
+    } catch { toast.error('Failed to send email. Please try again.'); }
+    finally { setEmailing(false); }
   };
 
   return (
@@ -144,9 +150,9 @@ function ChatPage() {
           >
             <SquarePen className="h-3 w-3" /> New chat
           </button>
-          <button onClick={endAndEmail}
-            className="flex items-center gap-1.5 rounded-full bg-primary px-3.5 py-2 text-xs font-semibold text-primary-foreground transition hover:opacity-90">
-            <Mail className="h-3 w-3" /> End &amp; email summary
+          <button onClick={endAndEmail} disabled={emailing}
+            className="flex items-center gap-1.5 rounded-full bg-primary px-3.5 py-2 text-xs font-semibold text-primary-foreground transition hover:opacity-90 disabled:opacity-50">
+            <Mail className="h-3 w-3" /> {emailing ? 'Sending...' : 'End & email summary'}
           </button>
         </div>
       </div>

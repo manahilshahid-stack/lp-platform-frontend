@@ -97,11 +97,16 @@ function CompanyPage() {
     setThinking(false);
   };
 
-  const emailSummary = () => {
-    if (!company) return;
-    toast.success(`Summary emailed to ${profile?.email}`, {
-      description: `A digest of your conversation on ${company.name} is on its way.`,
-    });
+  const [emailing, setEmailing] = useState(false);
+
+  const emailSummary = async () => {
+    if (!company || !sessionId) { toast.info('Start a conversation first before emailing the summary.'); return; }
+    setEmailing(true);
+    try {
+      await api(`/api/lp/chat/sessions/${sessionId}/email-summary`, { method: 'POST' });
+      toast.success(`Summary emailed to ${profile?.email}`, { description: `A digest of your conversation on ${company.name} is on its way.` });
+    } catch { toast.error('Failed to send email. Please try again.'); }
+    finally { setEmailing(false); }
   };
 
   if (loading) {
@@ -247,9 +252,9 @@ function CompanyPage() {
                 </div>
                 <div className="text-sm font-semibold">Ask about {company.name}</div>
               </div>
-              <button onClick={emailSummary}
-                className="flex items-center gap-1.5 rounded-full bg-primary px-3 py-1.5 text-[11px] font-semibold text-primary-foreground transition hover:opacity-90">
-                <Mail className="h-3 w-3" /> Email summary
+              <button onClick={emailSummary} disabled={emailing}
+                className="flex items-center gap-1.5 rounded-full bg-primary px-3 py-1.5 text-[11px] font-semibold text-primary-foreground transition hover:opacity-90 disabled:opacity-50">
+                <Mail className="h-3 w-3" /> {emailing ? 'Sending...' : 'Email summary'}
               </button>
             </div>
 
