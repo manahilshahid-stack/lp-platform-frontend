@@ -53,7 +53,7 @@ export const INVESTIGATIONS: Investigation[] = [
 export const CATEGORIES = [
   "Biotech", "Manufacturing", "Healthcare", "Techbio", "Mobile AI",
   "Logistics", "Fintech", "Cybersecurity", "Ecommerce", "Recruitment",
-  "Energy", "Fashion", "Data Management", "SaaS", "Legaltech",
+  "Energy", "Fashion", "Data Management", "SaaS", "Legaltech", "Robotics",
 ];
 
 export const FUNDS = ["Merantix Fund I", "Merantix Fund II", "Momentum Fund"];
