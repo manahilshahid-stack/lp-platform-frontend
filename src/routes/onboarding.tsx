@@ -29,17 +29,19 @@ function Onboarding() {
   const profile = typeof window !== "undefined" ? loadProfile() : null;
   const [step, setStep] = useState(0);
   const [interests, setInterests] = useState<string[]>(profile?.interests ?? []);
-  const [lookingFor, setLookingFor] = useState<string>(profile?.lookingFor ?? "");
+  const [lookingFor, setLookingFor] = useState<string[]>(
+    profile?.lookingFor ? [profile.lookingFor] : []
+  );
   const [bio, setBio] = useState(profile?.bio ?? "");
   if (!profile) return null;
 
   const finish = () => {
-    saveProfile({ ...profile, interests, lookingFor, bio, onboarded: true });
+    saveProfile({ ...profile, interests, lookingFor: lookingFor.join(", "), bio, onboarded: true });
     api("/api/lp/me", {
       method: "PUT",
       body: {
         interest_areas: interests,
-        looking_for: lookingFor ? [lookingFor] : [],
+        looking_for: lookingFor,
         about_yourself: bio,
         onboarding_completed: true,
       },
@@ -53,7 +55,7 @@ function Onboarding() {
     navigate({ to: "/home" });
   };
 
-  const canNext = step === 0 ? interests.length > 0 : step === 1 ? !!lookingFor : bio.trim().length >= 10;
+  const canNext = step === 0 ? interests.length > 0 : step === 1 ? lookingFor.length > 0 : bio.trim().length >= 10;
 
   return (
     <div className="min-h-screen bg-gradient-soft">
@@ -108,17 +110,19 @@ function Onboarding() {
               <h1 className="font-display text-4xl font-bold tracking-tight text-balance">
                 What are you primarily <span className="highlight-marker">looking for?</span>
               </h1>
-              <p className="mt-3 max-w-xl text-muted-foreground">This shapes the depth and frequency of what we serve up.</p>
+              <p className="mt-3 max-w-xl text-muted-foreground">Select everything that applies — we'll personalise what we surface for you.</p>
               <div className="mt-8 grid gap-3">
                 {LOOKING_FOR_OPTIONS.map((opt) => {
-                  const active = lookingFor === opt;
+                  const active = lookingFor.includes(opt);
                   return (
-                    <button key={opt} onClick={() => setLookingFor(opt)}
+                    <button key={opt} onClick={() => setLookingFor(
+                      active ? lookingFor.filter(x => x !== opt) : [...lookingFor, opt]
+                    )}
                       className={`flex items-center justify-between rounded-xl border bg-card px-5 py-4 text-left transition ${
                         active ? "border-accent shadow-elegant ring-2 ring-accent/30" : "border-border hover:border-foreground/30"
                       }`}>
                       <span className="text-sm font-medium">{opt}</span>
-                      <div className={`grid h-5 w-5 place-items-center rounded-full border transition ${active ? "border-accent bg-accent text-accent-foreground" : "border-border"}`}>
+                      <div className={`grid h-5 w-5 place-items-center rounded-md border transition ${active ? "border-accent bg-accent text-accent-foreground" : "border-border"}`}>
                         {active && <Check className="h-3 w-3" />}
                       </div>
                     </button>
