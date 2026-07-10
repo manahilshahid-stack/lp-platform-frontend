@@ -90,6 +90,7 @@ function ChatPage() {
     setStatusText("");
 
     let accumulated = "";
+    let messageId: number | undefined;
     try {
       for await (const event of streamChat(text, currentSessionId)) {
         if (event.type === "session") {
@@ -103,6 +104,7 @@ function ChatPage() {
           accumulated += event.text;
           setStreamingText(accumulated);
         } else if (event.type === "done") {
+          messageId = (event as any).message_id ?? undefined;
           break;
         }
       }
@@ -110,7 +112,7 @@ function ChatPage() {
       accumulated = accumulated || `⚠️ Error: ${err instanceof Error ? err.message : String(err)}`;
     }
 
-    setMessages([...next, { role: "assistant", content: accumulated, ts: Date.now() }]);
+    setMessages([...next, { role: "assistant", content: accumulated, ts: Date.now(), id: messageId }]);
     setStreamingText("");
     setStatusText("");
     setThinking(false);
@@ -166,16 +168,21 @@ function ChatPage() {
         ) : (
           <>
             {messages.map((m, i) => (
-              <div key={i} className={`flex gap-3 ${m.role === "user" ? "flex-row-reverse" : ""}`}>
+              <div key={i} className={`group flex gap-3 ${m.role === "user" ? "flex-row-reverse" : ""}`}>
                 <div className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg text-xs font-bold ${
                   m.role === "user" ? "bg-primary text-primary-foreground" : "border border-border bg-background"
                 }`}>
                   {m.role === "user" ? (profile?.name?.[0]?.toUpperCase() ?? "Y") : "✦"}
                 </div>
-                <div className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
-                  m.role === "user" ? "bg-primary text-primary-foreground" : "bg-secondary"
-                }`}>
-                  <FormattedText text={m.content} />
+                <div className="flex flex-col gap-1 max-w-[80%]">
+                  <div className={`rounded-2xl px-4 py-3 text-sm leading-relaxed ${
+                    m.role === "user" ? "bg-primary text-primary-foreground" : "bg-secondary"
+                  }`}>
+                    <FormattedText text={m.content} />
+                  </div>
+                  {m.role === "assistant" && m.id && (
+                    <FeedbackButtons messageId={m.id} />
+                  )}
                 </div>
               </div>
             ))}
@@ -313,4 +320,50 @@ function FormattedText({ text }: { text: string }) {
   }
 
   return <div className="space-y-1">{output}</div>;
+}
+
+function FeedbackButtons({ messageId }: { messageId: number }) {
+  const [rated, setRated] = useState<1 | -1 | null>(null);
+
+  const rate = async (rating: 1 | -1) => {
+    if (rated !== null) return;
+    setRated(rating);
+    try {
+      await api(`/api/lp/chat/messages/${messageId}/feedback`, {
+        method: "POST",
+        body: { rating },
+      });
+    } catch {
+      setRated(null);
+    }
+  };
+
+  if (rated !== null) {
+    return (
+      <div className="flex items-center gap-1 pl-1">
+        <span className="text-[10px] text-muted-foreground">
+          {rated === 1 ? "👍 Thanks for the feedback" : "👎 Thanks — we'll improve"}
+        </span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-1 pl-1 opacity-0 transition-opacity group-hover:opacity-100">
+      <button
+        onClick={() => rate(1)}
+        className="grid h-6 w-6 place-items-center rounded-md border border-border bg-background text-[11px] transition hover:border-foreground/30 hover:bg-secondary"
+        title="Helpful"
+      >
+        👍
+      </button>
+      <button
+        onClick={() => rate(-1)}
+        className="grid h-6 w-6 place-items-center rounded-md border border-border bg-background text-[11px] transition hover:border-foreground/30 hover:bg-secondary"
+        title="Not helpful"
+      >
+        👎
+      </button>
+    </div>
+  );
 }

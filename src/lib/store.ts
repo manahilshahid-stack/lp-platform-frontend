@@ -69,7 +69,7 @@ export function useProfile() {
   return profile;
 }
 
-export type ChatMessage = { role: "user" | "assistant"; content: string; ts: number };
+export type ChatMessage = { role: "user" | "assistant"; content: string; ts: number; id?: number };
 export type ChatSession = {
   id: string;
   /** Optional — only set when the chat was opened from a specific company page. */
