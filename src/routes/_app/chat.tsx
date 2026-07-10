@@ -24,7 +24,7 @@ const SUGGESTED = [
 
 type SessionResponse = {
   id: string;
-  messages: { role: "user" | "assistant"; content: string; ts: number }[];
+  messages: { id?: number; role: "user" | "assistant"; content: string; ts: number }[];
 };
 
 function ChatPage() {
@@ -60,6 +60,7 @@ function ChatPage() {
             role: m.role,
             content: m.content,
             ts: m.ts,
+            id: m.id,
           })));
           setCurrentSessionId(data.id);
           localStorage.setItem(LAST_SESSION_KEY, data.id);
