@@ -121,7 +121,7 @@ export function AuthShell({ title, subtitle, children }: { title: string; subtit
 
       <main className="relative z-10 mx-auto flex max-w-md flex-col px-6 py-16">
         <div className="rounded-3xl border border-foreground/10 bg-card/80 p-8 shadow-elegant backdrop-blur">
-          <div className="text-[10px] font-semibold uppercase tracking-[0.22em] text-accent">Limited Partner</div>
+          <div className="text-[10px] font-semibold uppercase tracking-[0.22em] text-foreground">Limited Partner</div>
           <h1 className="mt-1 font-display text-3xl font-bold tracking-tight">{title}</h1>
           <p className="mt-1.5 text-sm text-muted-foreground">{subtitle}</p>
           <div className="mt-7">{children}</div>

@@ -96,16 +96,16 @@ function SectorDetail() {
         <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
           <span>Sector</span>
           <span className="h-px w-6 bg-border" />
-          <span className="text-accent">Step 2 · Pick a company</span>
+          <span className="text-foreground">Step 2 · Pick a company</span>
           <span className="h-px w-6 bg-border" />
           <span>Chat</span>
         </div>
       </div>
 
       <section>
-        <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-accent">Sector</div>
+        <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-foreground">Sector</div>
         <h1 className="mt-1 font-display text-4xl font-bold tracking-tight md:text-5xl">
-          {sectorName}<span className="text-accent">.</span>
+          {sectorName}<span className="text-foreground">.</span>
         </h1>
         <p className="mt-2 max-w-2xl text-muted-foreground">
           {allCompanies.length} portfolio {allCompanies.length === 1 ? "company" : "companies"}.

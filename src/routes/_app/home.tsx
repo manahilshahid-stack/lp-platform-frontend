@@ -35,9 +35,9 @@ function HomePage() {
     <div className="mx-auto max-w-6xl px-6 py-10 space-y-12">
       {/* Greeting */}
       <header>
-        <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-accent">LP Portal</div>
+        <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-foreground">LP Portal</div>
         <h1 className="mt-1 font-display text-4xl font-bold tracking-tight md:text-5xl">
-          Welcome back, {firstName}<span className="text-accent">.</span>
+          Welcome back, {firstName}<span className="text-foreground">.</span>
         </h1>
         <p className="mt-2 max-w-2xl text-muted-foreground">
           Pick where you'd like to go. Everything here is private to you.
@@ -190,7 +190,7 @@ function ProfileCard({ profile }: { profile: NonNullable<ReturnType<typeof usePr
         <div className="min-w-0 flex-1">
           {!editing ? (
             <>
-              <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-accent">Your profile</div>
+              <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-foreground">Your profile</div>
               <h2 className="mt-1 font-display text-2xl font-bold tracking-tight">{profile.name}</h2>
               <div className="mt-1 text-sm text-muted-foreground">
                 {profile.email}{profile.company ? ` · ${profile.company}` : ""}

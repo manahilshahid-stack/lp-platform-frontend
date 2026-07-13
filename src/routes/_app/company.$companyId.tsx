@@ -128,7 +128,7 @@ function CompanyPage() {
     return (
       <div className="p-10 text-center">
         <p className="text-muted-foreground">Company not found.</p>
-        <Link to="/companies" className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-accent hover:underline">
+        <Link to="/companies" className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-foreground hover:underline">
           ← Back to portfolio
         </Link>
       </div>
@@ -235,7 +235,7 @@ function CompanyPage() {
           {websiteUrl && (
             <Section icon={Building2} title="Links">
               <a href={websiteUrl} target="_blank" rel="noreferrer"
-                className="inline-flex items-center gap-1.5 text-sm font-semibold text-accent hover:underline">
+                className="inline-flex items-center gap-1.5 text-sm font-semibold text-foreground hover:underline">
                 {company.website} <ExternalLink className="h-3.5 w-3.5" />
               </a>
             </Section>
@@ -329,7 +329,7 @@ function Section({ icon: Icon, title, children }: { icon: React.ElementType; tit
   return (
     <section className="rounded-2xl border border-border bg-card p-5">
       <div className="mb-3 flex items-center gap-2">
-        <Icon className="h-4 w-4 text-accent" />
+        <Icon className="h-4 w-4 text-foreground" />
         <h2 className="font-display text-lg font-bold tracking-tight">{title}</h2>
       </div>
       {children}

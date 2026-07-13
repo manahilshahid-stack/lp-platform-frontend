@@ -74,7 +74,22 @@ function ChatPage() {
     scroller.current?.scrollTo({ top: scroller.current.scrollHeight, behavior: "smooth" });
   }, [messages, thinking]);
 
-  const topic = useMemo(() => {
+  const startNewChat = () => {
+    localStorage.removeItem(LAST_SESSION_KEY);
+    setCurrentSessionId(null);
+    setInput("");
+    setStreamingText("");
+    setStatusText("");
+    setThinking(false);
+    setMessages([{
+      role: "assistant",
+      ts: Date.now(),
+      content: `Hi${profile?.name ? " " + profile.name.split(" ")[0] : ""} — ask me anything. When you're done, hit *End & email summary* and the key insights go to ${profile?.email ?? "your inbox"}.`,
+    }]);
+    window.history.replaceState({}, "", "/chat");
+  };
+
+    const topic = useMemo(() => {
     const firstUser = messages.find((m) => m.role === "user");
     if (!firstUser) return "General conversation";
     return firstUser.content.slice(0, 48) + (firstUser.content.length > 48 ? "…" : "");
@@ -147,7 +162,7 @@ function ChatPage() {
         </div>
         <div className="flex items-center gap-2">
           <button
-            onClick={() => { localStorage.removeItem(LAST_SESSION_KEY); navigate({ to: "/chat" }); }}
+            onClick={startNewChat}
             className="flex items-center gap-1.5 rounded-full border border-border bg-card px-3.5 py-2 text-xs font-semibold transition hover:border-foreground/30"
             title="New chat"
           >

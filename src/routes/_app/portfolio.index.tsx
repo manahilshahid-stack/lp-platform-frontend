@@ -51,7 +51,7 @@ function PortfolioHub() {
     <div className="mx-auto max-w-6xl px-6 py-10 space-y-12">
       {/* Step indicator */}
       <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-        <span className="text-accent">Step 1</span>
+        <span className="text-foreground">Step 1</span>
         <span className="h-px w-6 bg-border" />
         <span>Pick a sector</span>
         <span className="h-px w-6 bg-border" />
@@ -122,7 +122,7 @@ function PortfolioHub() {
 function Stat({ label, value, highlight }: { label: string; value: number; highlight?: boolean }) {
   return (
     <div>
-      <div className={`font-display text-2xl font-bold tracking-tight ${highlight ? "text-accent" : ""}`}>{value}</div>
+      <div className={`font-display text-2xl font-bold tracking-tight ${highlight ? "text-foreground" : ""}`}>{value}</div>
       <div className="text-[11px] uppercase tracking-wider text-muted-foreground">{label}</div>
     </div>
   );

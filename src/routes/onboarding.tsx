@@ -77,7 +77,7 @@ function Onboarding() {
         </div>
 
         <div className="flex-1">
-          <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-accent">
+          <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-foreground">
             Step {step + 1} of 3 · Optional but recommended
           </div>
 
@@ -122,7 +122,7 @@ function Onboarding() {
                         active ? "border-accent shadow-elegant ring-2 ring-accent/30" : "border-border hover:border-foreground/30"
                       }`}>
                       <span className="text-sm font-medium">{opt}</span>
-                      <div className={`grid h-5 w-5 place-items-center rounded-md border transition ${active ? "border-accent bg-accent text-accent-foreground" : "border-border"}`}>
+                      <div className={`grid h-5 w-5 place-items-center rounded-md border transition ${active ? "border-accent bg-accent text-foreground-foreground" : "border-border"}`}>
                         {active && <Check className="h-3 w-3" />}
                       </div>
                     </button>
@@ -163,7 +163,7 @@ function Onboarding() {
               </button>
             ) : (
               <button onClick={finish} disabled={!canNext}
-                className="flex items-center gap-2 rounded-full bg-accent px-6 py-2.5 text-sm font-semibold text-accent-foreground transition hover:opacity-90 disabled:opacity-40">
+                className="flex items-center gap-2 rounded-full bg-accent px-6 py-2.5 text-sm font-semibold text-foreground-foreground transition hover:opacity-90 disabled:opacity-40">
                 Enter portal <ArrowRight className="h-4 w-4" />
               </button>
             )}

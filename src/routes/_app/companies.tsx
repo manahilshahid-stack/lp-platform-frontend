@@ -52,7 +52,7 @@ function CompaniesIndex() {
   return (
     <div className="mx-auto max-w-6xl px-6 py-10 space-y-8">
       <header>
-        <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-accent">Directory</div>
+        <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-foreground">Directory</div>
         <h1 className="mt-1 font-display text-4xl font-bold tracking-tight md:text-5xl">
           Browse the <span className="highlight-marker">portfolio</span>.
         </h1>

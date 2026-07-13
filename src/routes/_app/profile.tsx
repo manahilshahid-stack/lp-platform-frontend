@@ -92,7 +92,7 @@ function ProfilePage() {
     <div className="mx-auto max-w-4xl px-6 py-10 space-y-10">
       <header className="flex flex-wrap items-end justify-between gap-6">
         <div>
-          <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-accent">Limited Partner</div>
+          <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-foreground">Limited Partner</div>
           <h1 className="mt-1 font-display text-4xl font-bold tracking-tight">Your profile</h1>
           <p className="mt-2 text-muted-foreground">Manage the information used to personalize recommendations.</p>
         </div>

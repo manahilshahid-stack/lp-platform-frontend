@@ -81,7 +81,7 @@ function LPLanding() {
               <br />
               the <span className="highlight-marker">Merantix</span>
               <br />
-              portfolio<span className="text-accent">.</span>
+              portfolio<span className="text-foreground">.</span>
             </h1>
 
             <p className="mt-7 max-w-xl text-base leading-relaxed text-muted-foreground md:text-lg">
@@ -102,7 +102,7 @@ function LPLanding() {
             </div>
 
             <div className="mt-10 flex items-center gap-5 text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
-              <span className="inline-flex items-center gap-1.5"><ShieldCheck className="h-3.5 w-3.5 text-accent" /> Confidential</span>
+              <span className="inline-flex items-center gap-1.5"><ShieldCheck className="h-3.5 w-3.5 text-foreground" /> Confidential</span>
               <span className="h-1 w-1 rounded-full bg-border" />
               <span>Invite only</span>
               <span className="h-1 w-1 rounded-full bg-border" />
@@ -139,7 +139,7 @@ function LPLanding() {
 
             <div className="absolute -left-6 -bottom-6 hidden rounded-2xl border border-foreground/10 bg-card px-4 py-3 shadow-elegant md:block">
               <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Portfolio companies</div>
-              <div className="mt-1 font-display text-2xl font-bold">{companies.length}<span className="text-accent">.</span></div>
+              <div className="mt-1 font-display text-2xl font-bold">{companies.length}<span className="text-foreground">.</span></div>
             </div>
           </div>
         </div>
@@ -158,7 +158,7 @@ function LPLanding() {
       <section className="relative z-10 mx-auto max-w-7xl px-6 py-20">
         <div className="flex items-end justify-between gap-6">
           <div>
-            <div className="text-[10px] font-semibold uppercase tracking-[0.22em] text-accent">Inside the portal</div>
+            <div className="text-[10px] font-semibold uppercase tracking-[0.22em] text-foreground">Inside the portal</div>
             <h2 className="mt-2 font-display text-3xl font-bold tracking-tight md:text-5xl">Three things, done well.</h2>
           </div>
           <div className="hidden text-[11px] uppercase tracking-[0.2em] text-muted-foreground md:block">For LPs only</div>
