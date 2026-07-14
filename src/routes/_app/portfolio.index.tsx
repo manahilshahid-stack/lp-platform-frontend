@@ -61,11 +61,15 @@ function PortfolioHub() {
       </div>
 
       <section>
+        <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5">
+          <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-amber-700">Coming soon — Sector deep-dives launching shortly</span>
+        </div>
         <h1 className="font-display text-4xl font-bold tracking-tight md:text-5xl">
           Start with a <span className="highlight-marker">sector.</span>
         </h1>
         <p className="mt-3 max-w-2xl text-muted-foreground">
-          Browse the Merantix Capital portfolio the way we think about it — by domain. Pick a sector to see the companies inside it.
+          Browse the Merantix Capital portfolio the way we think about it — by domain. Full sector analysis, benchmarks, and thesis breakdowns coming soon.
         </p>
 
         <div className="mt-6 flex flex-wrap gap-6 text-sm">
