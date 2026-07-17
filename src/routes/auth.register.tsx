@@ -1,9 +1,9 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { saveProfile, setToken, type Profile } from "@/lib/store";
 import { api } from "@/lib/api/backend";
 import { ArrowRight } from "lucide-react";
 import { AuthShell, Field } from "./auth.login";
+import { savePendingEmail } from "./auth.verify";
 
 export const Route = createFileRoute("/auth/register")({
   head: () => ({
@@ -12,19 +12,10 @@ export const Route = createFileRoute("/auth/register")({
   component: RegisterPage,
 });
 
-type AuthResponse = {
+type RegisterResponse = {
   ok: boolean;
-  token: string;
-  user: {
-    id: number;
-    email: string;
-    name: string;
-    organization: string | null;
-    interest_areas: string[];
-    looking_for: string[];
-    about_yourself: string;
-    onboarding_completed: boolean;
-  };
+  requires_verification: boolean;
+  email: string;
 };
 
 function RegisterPage() {
@@ -47,26 +38,13 @@ function RegisterPage() {
     }
     setLoading(true);
     try {
-      const res = await api<AuthResponse>("/api/lp/register", {
+      const res = await api<RegisterResponse>("/api/lp/register", {
         method: "POST",
         body: { first_name: firstName, last_name: lastName, email, company, password },
         auth: false,
       });
-      setToken(res.token);
-      const profile: Profile = {
-        email: res.user.email,
-        name: res.user.name,
-        firstName,
-        lastName,
-        company: res.user.organization ?? undefined,
-        role: "lp",
-        interests: [],
-        lookingFor: "",
-        bio: "",
-        onboarded: false,
-      };
-      saveProfile(profile);
-      navigate({ to: "/onboarding" });
+      savePendingEmail(res.email);
+      navigate({ to: "/auth/verify" });
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       const raw = msg.replace(/^Backend \d+:\s*/, "");

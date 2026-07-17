@@ -4,6 +4,7 @@ import { saveProfile, setToken, type Profile } from "@/lib/store";
 import { api } from "@/lib/api/backend";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { Logo } from "@/components/Logo";
+import { savePendingEmail } from "./auth.verify";
 
 export const Route = createFileRoute("/auth/login")({
   head: () => ({
@@ -62,6 +63,12 @@ function LoginPage() {
       navigate({ to: res.user.onboarding_completed ? "/home" : "/onboarding" });
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
+      // Backend returns 403 with {code: "email_not_verified", email: "..."}
+      if (msg.includes("403") || msg.toLowerCase().includes("email_not_verified") || msg.toLowerCase().includes("not_verified")) {
+        savePendingEmail(email);
+        navigate({ to: "/auth/verify" });
+        return;
+      }
       setError(msg.includes("401") ? "Invalid email or password." : "Something went wrong, please try again.");
     } finally {
       setLoading(false);
