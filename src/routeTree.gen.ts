@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthVerifyRouteImport } from './routes/auth.verify'
 import { Route as AuthRegisterRouteImport } from './routes/auth.register'
 import { Route as AuthLoginRouteImport } from './routes/auth.login'
 import { Route as AppProfileRouteImport } from './routes/_app/profile'
@@ -35,6 +36,11 @@ const AppRoute = AppRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthVerifyRoute = AuthVerifyRouteImport.update({
+  id: '/auth/verify',
+  path: '/auth/verify',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRegisterRoute = AuthRegisterRouteImport.update({
@@ -98,6 +104,7 @@ export interface FileRoutesByFullPath {
   '/profile': typeof AppProfileRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/register': typeof AuthRegisterRoute
+  '/auth/verify': typeof AuthVerifyRoute
   '/company/$companyId': typeof AppCompanyCompanyIdRoute
   '/portfolio/$sector': typeof AppPortfolioSectorRoute
   '/portfolio/': typeof AppPortfolioIndexRoute
@@ -112,6 +119,7 @@ export interface FileRoutesByTo {
   '/profile': typeof AppProfileRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/register': typeof AuthRegisterRoute
+  '/auth/verify': typeof AuthVerifyRoute
   '/company/$companyId': typeof AppCompanyCompanyIdRoute
   '/portfolio/$sector': typeof AppPortfolioSectorRoute
   '/portfolio': typeof AppPortfolioIndexRoute
@@ -128,6 +136,7 @@ export interface FileRoutesById {
   '/_app/profile': typeof AppProfileRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/register': typeof AuthRegisterRoute
+  '/auth/verify': typeof AuthVerifyRoute
   '/_app/company/$companyId': typeof AppCompanyCompanyIdRoute
   '/_app/portfolio/$sector': typeof AppPortfolioSectorRoute
   '/_app/portfolio/': typeof AppPortfolioIndexRoute
@@ -144,6 +153,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/auth/login'
     | '/auth/register'
+    | '/auth/verify'
     | '/company/$companyId'
     | '/portfolio/$sector'
     | '/portfolio/'
@@ -158,6 +168,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/auth/login'
     | '/auth/register'
+    | '/auth/verify'
     | '/company/$companyId'
     | '/portfolio/$sector'
     | '/portfolio'
@@ -173,6 +184,7 @@ export interface FileRouteTypes {
     | '/_app/profile'
     | '/auth/login'
     | '/auth/register'
+    | '/auth/verify'
     | '/_app/company/$companyId'
     | '/_app/portfolio/$sector'
     | '/_app/portfolio/'
@@ -184,6 +196,7 @@ export interface RootRouteChildren {
   OnboardingRoute: typeof OnboardingRoute
   AuthLoginRoute: typeof AuthLoginRoute
   AuthRegisterRoute: typeof AuthRegisterRoute
+  AuthVerifyRoute: typeof AuthVerifyRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -207,6 +220,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/verify': {
+      id: '/auth/verify'
+      path: '/auth/verify'
+      fullPath: '/auth/verify'
+      preLoaderRoute: typeof AuthVerifyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth/register': {
@@ -312,6 +332,7 @@ const rootRouteChildren: RootRouteChildren = {
   OnboardingRoute: OnboardingRoute,
   AuthLoginRoute: AuthLoginRoute,
   AuthRegisterRoute: AuthRegisterRoute,
+  AuthVerifyRoute: AuthVerifyRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

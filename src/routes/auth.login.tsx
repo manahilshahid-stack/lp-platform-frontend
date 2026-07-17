@@ -25,6 +25,7 @@ type AuthResponse = {
     looking_for: string[];
     about_yourself: string;
     onboarding_completed: boolean;
+    avatar: string | null;
   };
 };
 
@@ -58,6 +59,7 @@ function LoginPage() {
         lookingFor: res.user.looking_for[0] ?? "",
         bio: res.user.about_yourself,
         onboarded: res.user.onboarding_completed,
+        avatar: res.user.avatar ?? undefined,
       };
       saveProfile(profile);
       navigate({ to: res.user.onboarding_completed ? "/home" : "/onboarding" });

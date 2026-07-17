@@ -83,6 +83,7 @@ function ProfilePage() {
         looking_for: lookingFor ? [lookingFor] : [],
         about_yourself: bio,
         onboarding_completed: true,
+        avatar: avatar ?? null,
       },
     }).catch(console.error);
     toast.success("Profile updated");
