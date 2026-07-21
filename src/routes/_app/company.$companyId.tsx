@@ -53,6 +53,7 @@ function CompanyPage() {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [input, setInput] = useState("");
   const [thinking, setThinking] = useState(false);
+  const [statusText, setStatusText] = useState("");
   const [streamingText, setStreamingText] = useState("");
   const scroller = useRef<HTMLDivElement>(null);
 
@@ -84,7 +85,9 @@ function CompanyPage() {
     try {
       for await (const event of streamChat(text, sessionId, company.name)) {
         if (event.type === "session") setSessionId(event.session_id);
+        else if (event.type === "status") setStatusText(event.text);
         else if (event.type === "token") {
+          setStatusText("");
           accumulated += event.text;
           setStreamingText(accumulated);
         } else if (event.type === "done") break;
@@ -92,6 +95,7 @@ function CompanyPage() {
     } catch {
       accumulated = accumulated || "⚠️ Could not reach the AI analyst. Please try again.";
     }
+    setStatusText("");
     setMessages([...next, { role: "assistant", content: accumulated, ts: Date.now() }]);
     setStreamingText("");
     setThinking(false);
@@ -276,10 +280,16 @@ function CompanyPage() {
               {thinking && !streamingText && (
                 <div className="flex gap-2.5">
                   <div className="grid h-7 w-7 place-items-center rounded-lg border border-border bg-background text-xs">✦</div>
-                  <div className="flex items-center gap-1 rounded-2xl bg-secondary px-3.5 py-2.5">
-                    <span className="h-1.5 w-1.5 rounded-full bg-foreground/60 pulse-dot" />
-                    <span className="h-1.5 w-1.5 rounded-full bg-foreground/60 pulse-dot" style={{ animationDelay: "0.2s" }} />
-                    <span className="h-1.5 w-1.5 rounded-full bg-foreground/60 pulse-dot" style={{ animationDelay: "0.4s" }} />
+                  <div className="flex items-center gap-2 rounded-2xl bg-secondary px-3.5 py-2.5">
+                    {statusText ? (
+                      <span className="text-[11px] text-muted-foreground italic">{statusText}</span>
+                    ) : (
+                      <>
+                        <span className="h-1.5 w-1.5 rounded-full bg-foreground/60 pulse-dot" />
+                        <span className="h-1.5 w-1.5 rounded-full bg-foreground/60 pulse-dot" style={{ animationDelay: "0.2s" }} />
+                        <span className="h-1.5 w-1.5 rounded-full bg-foreground/60 pulse-dot" style={{ animationDelay: "0.4s" }} />
+                      </>
+                    )}
                   </div>
                 </div>
               )}
