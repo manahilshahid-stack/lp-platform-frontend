@@ -1,9 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useRef, useState } from "react";
-import { saveProfile, useProfile } from "@/lib/store";
-import { CATEGORIES } from "@/lib/mockData";
-import { ArrowUpRight, Camera, Check, LayoutGrid, MessageSquare, Pencil, Sparkles, X } from "lucide-react";
-import { toast } from "sonner";
+import { useProfile } from "@/lib/store";
+import { ArrowUpRight, LayoutGrid, MessageSquare, Rss, Sparkles } from "lucide-react";
 
 export const Route = createFileRoute("/_app/home")({
   head: () => ({
@@ -72,8 +69,8 @@ function HomePage() {
         />
       </section>
 
-      {/* Profile */}
-      <ProfileCard profile={profile} />
+      {/* News Feed Banner */}
+      <NewsFeedBanner />
     </div>
   );
 }
@@ -113,189 +110,46 @@ function FunnelCard({
   );
 }
 
-function ProfileCard({ profile }: { profile: NonNullable<ReturnType<typeof useProfile>> }) {
-  const [editing, setEditing] = useState(false);
-  const fileInput = useRef<HTMLInputElement>(null);
-
-  const [firstName, setFirstName] = useState(profile.firstName ?? profile.name.split(" ")[0] ?? "");
-  const [lastName, setLastName] = useState(profile.lastName ?? profile.name.split(" ").slice(1).join(" ") ?? "");
-  const [company, setCompany] = useState(profile.company ?? "");
-  const [interests, setInterests] = useState<string[]>(profile.interests ?? []);
-  const [lookingFor, setLookingFor] = useState(profile.lookingFor ?? "");
-  const [bio, setBio] = useState(profile.bio ?? "");
-  const [avatar, setAvatar] = useState<string | undefined>(profile.avatar);
-
-  const initials = (firstName[0] ?? profile.email[0] ?? "?").toUpperCase() + (lastName[0] ?? "").toUpperCase();
-
-  const onUpload = (file: File) => {
-    if (file.size > 2 * 1024 * 1024) {
-      toast.error("Image must be under 2 MB.");
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = String(reader.result);
-      setAvatar(result);
-      if (!editing) {
-        // Save immediately if not in edit mode
-        saveProfile({ ...profile, avatar: result });
-        toast.success("Profile picture updated");
-      }
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const save = () => {
-    saveProfile({
-      ...profile,
-      firstName,
-      lastName,
-      name: `${firstName} ${lastName}`.trim() || profile.email.split("@")[0],
-      company: company || undefined,
-      interests,
-      lookingFor,
-      bio,
-      avatar,
-    });
-    setEditing(false);
-    toast.success("Profile updated");
-  };
-
+function NewsFeedBanner() {
   return (
-    <section className="rounded-3xl border border-border bg-card p-6 md:p-8">
-      <div className="flex flex-wrap items-start gap-6">
-        {/* Avatar */}
-        <div className="relative">
-          <div className="grid h-24 w-24 place-items-center overflow-hidden rounded-2xl bg-secondary font-display text-2xl font-bold text-foreground">
-            {avatar ? (
-              <img src={avatar} alt="Profile" className="h-full w-full object-cover" />
-            ) : (
-              <span>{initials}</span>
-            )}
+    <section className="relative overflow-hidden rounded-3xl border border-border bg-card p-8 md:p-10">
+      {/* Subtle background pattern */}
+      <div className="pointer-events-none absolute inset-0 opacity-[0.03]"
+        style={{ backgroundImage: "radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)", backgroundSize: "24px 24px" }} />
+
+      <div className="relative flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+        <div className="flex items-start gap-5">
+          <div className="grid h-14 w-14 flex-shrink-0 place-items-center rounded-2xl bg-secondary">
+            <Rss className="h-6 w-6 text-muted-foreground" />
           </div>
-          <button
-            onClick={() => fileInput.current?.click()}
-            className="absolute -bottom-2 -right-2 grid h-8 w-8 place-items-center rounded-full bg-foreground text-background shadow-elegant transition hover:opacity-90"
-            aria-label="Upload profile picture"
-          >
-            <Camera className="h-3.5 w-3.5" />
-          </button>
-          <input
-            ref={fileInput} type="file" accept="image/*" className="hidden"
-            onChange={(e) => { const f = e.target.files?.[0]; if (f) onUpload(f); }}
-          />
-        </div>
-
-        {/* Identity */}
-        <div className="min-w-0 flex-1">
-          {!editing ? (
-            <>
-              <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-foreground">Your profile</div>
-              <h2 className="mt-1 font-display text-2xl font-bold tracking-tight">{profile.name}</h2>
-              <div className="mt-1 text-sm text-muted-foreground">
-                {profile.email}{profile.company ? ` · ${profile.company}` : ""}
+          <div>
+            <div className="flex items-center gap-2">
+              <div className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+                04 · News Feed
               </div>
-            </>
-          ) : (
-            <div className="space-y-3">
-              <div className="grid grid-cols-2 gap-2">
-                <input value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="First name"
-                  className="rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-accent focus:ring-2 focus:ring-accent/30" />
-                <input value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Last name"
-                  className="rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-accent focus:ring-2 focus:ring-accent/30" />
-              </div>
-              <input value={company} onChange={(e) => setCompany(e.target.value)} placeholder="Company (optional)"
-                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-accent focus:ring-2 focus:ring-accent/30" />
+              <span className="inline-flex items-center rounded-full bg-secondary px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                Coming Soon
+              </span>
             </div>
-          )}
+            <h2 className="mt-1 font-display text-2xl font-bold tracking-tight">Portfolio News &amp; Updates</h2>
+            <p className="mt-2 max-w-xl text-sm leading-relaxed text-muted-foreground">
+              Live news, press releases, and milestone updates from across the Merantix Capital portfolio —
+              aggregated in one feed, filtered to what matters to you.
+            </p>
+          </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          {editing ? (
-            <>
-              <button onClick={() => setEditing(false)}
-                className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3.5 py-2 text-xs font-semibold transition hover:bg-secondary">
-                <X className="h-3 w-3" /> Cancel
-              </button>
-              <button onClick={save}
-                className="inline-flex items-center gap-1.5 rounded-full bg-primary px-3.5 py-2 text-xs font-semibold text-primary-foreground transition hover:opacity-90">
-                <Check className="h-3 w-3" /> Save
-              </button>
-            </>
-          ) : (
-            <button onClick={() => setEditing(true)}
-              className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3.5 py-2 text-xs font-semibold transition hover:bg-secondary">
-              <Pencil className="h-3 w-3" /> Edit
-            </button>
-          )}
+        {/* Placeholder cards */}
+        <div className="flex flex-shrink-0 flex-col gap-2 md:w-56">
+          {["Funding announcements", "Product launches", "Press coverage"].map((label) => (
+            <div key={label}
+              className="flex items-center gap-3 rounded-xl border border-border bg-background/60 px-3.5 py-2.5 opacity-50">
+              <div className="h-1.5 w-1.5 rounded-full bg-muted-foreground" />
+              <span className="text-xs text-muted-foreground">{label}</span>
+            </div>
+          ))}
         </div>
-      </div>
-
-      {/* Onboarding answers */}
-      <div className="mt-8 grid gap-6 border-t border-border pt-6 md:grid-cols-3">
-        <PreferenceBlock title="Areas of interest">
-          {editing ? (
-            <div className="flex flex-wrap gap-1.5">
-              {CATEGORIES.map((c) => {
-                const active = interests.includes(c);
-                return (
-                  <button key={c} type="button"
-                    onClick={() => setInterests(active ? interests.filter((x) => x !== c) : [...interests, c])}
-                    className={`rounded-full border px-2.5 py-1 text-[11px] font-medium transition ${
-                      active ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background text-muted-foreground hover:border-foreground/30"
-                    }`}>
-                    {c}
-                  </button>
-                );
-              })}
-            </div>
-          ) : interests.length ? (
-            <div className="flex flex-wrap gap-1.5">
-              {interests.map((i) => (
-                <span key={i} className="rounded-full bg-secondary px-2.5 py-1 text-[11px] font-medium">{i}</span>
-              ))}
-            </div>
-          ) : (
-            <EmptyHint>Add interests to personalize recommendations.</EmptyHint>
-          )}
-        </PreferenceBlock>
-
-        <PreferenceBlock title="Looking for">
-          {editing ? (
-            <input value={lookingFor} onChange={(e) => setLookingFor(e.target.value)} placeholder="e.g. Early-stage co-invest opportunities"
-              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-accent focus:ring-2 focus:ring-accent/30" />
-          ) : lookingFor ? (
-            <p className="text-sm text-foreground/90">{lookingFor}</p>
-          ) : (
-            <EmptyHint>Tell us what kind of insight you want.</EmptyHint>
-          )}
-        </PreferenceBlock>
-
-        <PreferenceBlock title="About you">
-          {editing ? (
-            <textarea value={bio} onChange={(e) => setBio(e.target.value)} rows={4}
-              placeholder="Background, fund focus, anything the analyst should keep in mind."
-              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm leading-relaxed outline-none focus:border-accent focus:ring-2 focus:ring-accent/30" />
-          ) : bio ? (
-            <p className="text-sm leading-relaxed text-foreground/90">{bio}</p>
-          ) : (
-            <EmptyHint>A short bio improves the analyst's answers.</EmptyHint>
-          )}
-        </PreferenceBlock>
       </div>
     </section>
   );
-}
-
-function PreferenceBlock({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div className="space-y-2">
-      <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">{title}</div>
-      {children}
-    </div>
-  );
-}
-
-function EmptyHint({ children }: { children: React.ReactNode }) {
-  return <div className="text-xs italic text-muted-foreground">{children}</div>;
 }
