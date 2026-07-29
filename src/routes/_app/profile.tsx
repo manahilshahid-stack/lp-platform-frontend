@@ -51,12 +51,26 @@ function ProfilePage() {
   const initials = (firstName[0] ?? profile.email[0] ?? "?").toUpperCase() + (lastName[0] ?? "").toUpperCase();
 
   const onUpload = (file: File) => {
-    if (file.size > 2 * 1024 * 1024) {
-      toast.error("Image must be under 2 MB.");
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("Image must be under 10 MB.");
       return;
     }
     const reader = new FileReader();
-    reader.onload = () => setAvatar(String(reader.result));
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        // Resize to max 256×256 and compress to JPEG — keeps base64 under ~30KB
+        const SIZE = 256;
+        const canvas = document.createElement("canvas");
+        const scale = Math.min(SIZE / img.width, SIZE / img.height, 1);
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        const ctx = canvas.getContext("2d")!;
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        setAvatar(canvas.toDataURL("image/jpeg", 0.82));
+      };
+      img.src = String(e.target?.result);
+    };
     reader.readAsDataURL(file);
   };
 

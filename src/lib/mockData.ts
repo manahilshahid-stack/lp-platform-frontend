@@ -71,9 +71,9 @@ export const COMPANIES: Company[] = [
     fund: "Merantix Fund II", investmentYear: 2021, valuation: 65, invested: 5, growth: 140, hq: "Berlin, DE",
   },
   {
-    id: "deltia", name: "Deltia", tagline: "Unlocking a new level of productivity in assembly lines",
-    category: "Manufacturing", stage: "Pre-Idea", founders: ["Maximilian Fischer", "Silviu Homoceanu"],
-    website: "deltia.ai", status: "Active", logo: "D", color: orange,
+    id: "almetra", name: "Almetra", tagline: "Unlocking a new level of productivity in assembly lines",
+    category: "Manufacturing", stage: "Series A", founders: ["Maximilian Fischer", "Silviu Homoceanu"],
+    website: "almetra.ai", status: "Active", logo: "A", color: orange,
     fund: "Merantix Fund II", investmentYear: 2021, valuation: 80, invested: 6, growth: 165, hq: "Berlin, DE",
   },
   {
