@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { api } from "@/lib/api/backend";
-import { ArrowUpRight, Search } from "lucide-react";
+import { ArrowUpRight, BarChart3, Search } from "lucide-react";
+import { CompanyKpiDashboard } from "@/components/CompanyKpiDashboard";
 
 export const Route = createFileRoute("/_app/companies")({
   head: () => ({
@@ -28,6 +29,7 @@ type Company = {
 function CompaniesIndex() {
   const [q, setQ] = useState("");
   const [status, setStatus] = useState<"All" | "Active" | "Exited" | "Stealth">("All");
+  const [dashboardFor, setDashboardFor] = useState<string | null>(null);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -106,11 +108,40 @@ function CompaniesIndex() {
                 <p className="mt-1 text-sm text-muted-foreground line-clamp-2">{c.tagline}</p>
                 <div className="mt-4 flex items-center justify-between border-t border-border pt-3 text-[11px] text-muted-foreground">
                   <span>{c.category}</span>
-                  <ArrowUpRight className="h-3.5 w-3.5 transition group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-foreground" />
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); setDashboardFor(c.name); }}
+                      className="inline-flex items-center gap-1 rounded-full border border-border bg-background px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider transition hover:border-foreground hover:bg-foreground hover:text-background"
+                    >
+                      <BarChart3 className="h-3 w-3" /> Dashboard
+                    </button>
+                    <ArrowUpRight className="h-3.5 w-3.5 transition group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-foreground" />
+                  </div>
                 </div>
               </Link>
             ))}
           </div>
+
+          {/* Dashboard dialog — key metrics from the backend for the chosen company */}
+          {dashboardFor && (
+            <div
+              className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-foreground/40 p-6 backdrop-blur-sm"
+              onClick={() => setDashboardFor(null)}
+            >
+              <div className="w-full max-w-3xl" onClick={(e) => e.stopPropagation()}>
+                <div className="mb-2 flex items-center justify-between">
+                  <h2 className="font-display text-lg font-bold text-background">{dashboardFor} — Dashboard</h2>
+                  <button
+                    onClick={() => setDashboardFor(null)}
+                    className="rounded-full bg-background px-3 py-1 text-xs font-semibold"
+                  >
+                    ✕ Close
+                  </button>
+                </div>
+                <CompanyKpiDashboard companyName={dashboardFor} />
+              </div>
+            </div>
+          )}
 
           {filtered.length === 0 && (
             <div className="rounded-2xl border border-dashed border-border p-10 text-center text-sm text-muted-foreground">

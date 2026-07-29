@@ -57,20 +57,49 @@ function delta(cur: number, prev: number): string | null {
 
 export function CompanyKpiDashboard({ companyName }: { companyName: string }) {
   const [data, setData] = useState<KpiResponse | null>(null);
+  const [status, setStatus] = useState<string>("loading");
 
   useEffect(() => {
     let cancelled = false;
     const load = () =>
       api<KpiResponse>("/api/lp/kpis", { query: { company: companyName } })
-        .then((r) => { if (!cancelled) setData(r); })
-        .catch(() => { /* keep last state */ });
+        .then((r) => {
+          if (cancelled) return;
+          setData(r);
+          setStatus(r.periods.length > 0 ? "ok" : "empty");
+        })
+        .catch((e: Error) => {
+          if (cancelled) return;
+          const m = /Backend (\d+)/.exec(e.message);
+          setStatus(m ? `http_${m[1]}` : "network");
+        });
     load();
     const t = setInterval(load, POLL_MS);
     return () => { cancelled = true; clearInterval(t); };
   }, [companyName]);
 
   const periods = data?.periods ?? [];
-  if (periods.length === 0) return null;
+
+  // Always render a visible state so problems are self-diagnosing.
+  if (status !== "ok") {
+    const msg: Record<string, string> = {
+      loading: "Loading KPI data…",
+      empty: `No KPI data extracted yet from ${companyName}'s quarterly reports. Reports may still be processing, or KPI extraction produced no values — check the document pages in the admin portal.`,
+      http_404: "KPI endpoint not found — the backend on Railway is running an older version without /api/lp/kpis. Redeploy the backend.",
+      http_403: `${companyName} is not recognised as a portfolio company by the backend (CRM stage/name mismatch).`,
+      http_401: "Not authenticated — try logging out and back in.",
+      network: "Could not reach the backend.",
+    };
+    return (
+      <section className="rounded-2xl border border-border bg-card p-5">
+        <div className="mb-1 flex items-center gap-2">
+          <BarChart3 className="h-4 w-4 text-muted-foreground" />
+          <h2 className="text-sm font-bold uppercase tracking-wider">Performance dashboard</h2>
+        </div>
+        <p className="text-xs text-muted-foreground">{msg[status] ?? `Unexpected error (${status}).`}</p>
+      </section>
+    );
+  }
 
   const latest = periods[periods.length - 1];
   const prev = periods.length > 1 ? periods[periods.length - 2] : null;
