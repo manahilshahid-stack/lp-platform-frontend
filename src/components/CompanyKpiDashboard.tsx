@@ -65,9 +65,25 @@ const tooltipStyle = {
   fontSize: 12,
 };
 
+// Quarterly view: one entry per quarter, using the LATEST report within that
+// quarter (point-in-time metrics like cash/ARR/headcount are "as of quarter
+// end" — nothing is summed or invented; every value is still a real reported
+// number with its source quote).
+function toQuarterly(periods: Period[]): Period[] {
+  const byQuarter = new Map<string, Period>();
+  for (const p of periods) {
+    const q = p.quarter ?? (p.month ? Math.ceil(p.month / 3) : null);
+    if (q == null) continue;
+    const key = `${p.year}-Q${q}`;
+    byQuarter.set(key, { ...p, period: key, quarter: q });  // later entries overwrite = latest in quarter
+  }
+  return Array.from(byQuarter.values());
+}
+
 export function CompanyKpiDashboard({ companyName }: { companyName: string }) {
   const [data, setData] = useState<KpiResponse | null>(null);
   const [status, setStatus] = useState<string>("loading");
+  const [view, setView] = useState<"reports" | "quarterly">("reports");
 
   useEffect(() => {
     let cancelled = false;
@@ -88,7 +104,9 @@ export function CompanyKpiDashboard({ companyName }: { companyName: string }) {
     return () => { cancelled = true; clearInterval(t); };
   }, [companyName]);
 
-  const periods = data?.periods ?? [];
+  const rawPeriods = data?.periods ?? [];
+  const periods = view === "quarterly" ? toQuarterly(rawPeriods) : rawPeriods;
+  const hasMonthly = rawPeriods.some((p) => p.month);
 
   // Always render a visible state so problems are self-diagnosing.
   if (status !== "ok") {
@@ -137,6 +155,12 @@ export function CompanyKpiDashboard({ companyName }: { companyName: string }) {
     (k) => k !== primaryKey && history(k).length > 0,
   );
 
+  // Quarter comparison: always the last up-to-4 quarters, for every company.
+  const cmpQuarters = toQuarterly(rawPeriods).slice(-4);
+  const cmpKeys = KPI_ORDER.filter((k) =>
+    cmpQuarters.some((q) => typeof q.kpis[k]?.value === "number"),
+  );
+
   const cards = KPI_ORDER
     .filter((k) => latest.kpis[k] !== undefined)
     .map((k) => {
@@ -153,15 +177,30 @@ export function CompanyKpiDashboard({ companyName }: { companyName: string }) {
       <div className="mb-1 flex items-center gap-2">
         <BarChart3 className="h-4 w-4 text-muted-foreground" />
         <h2 className="text-sm font-bold uppercase tracking-wider">Performance dashboard</h2>
-        <span className="ml-auto text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-          {periods.length > 1
-            ? `Last ${periods.length} ${periods.some((p) => p.month) ? "reports" : "quarters"}`
-            : `As reported for ${latest.period}`}
-        </span>
+        <div className="ml-auto flex items-center gap-2">
+          {hasMonthly && (
+            <div className="flex overflow-hidden rounded-full border border-border text-[10px] font-semibold uppercase tracking-wider">
+              {(["reports", "quarterly"] as const).map((v) => (
+                <button key={v} onClick={() => setView(v)}
+                  className={`px-2.5 py-1 transition ${view === v
+                    ? "bg-foreground text-background"
+                    : "bg-background text-muted-foreground hover:text-foreground"}`}>
+                  {v === "reports" ? "Monthly" : "Quarterly"}
+                </button>
+              ))}
+            </div>
+          )}
+          <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            {periods.length > 1
+              ? `Last ${periods.length} ${view === "quarterly" ? "quarters" : "reports"}`
+              : `As reported for ${latest.period}`}
+          </span>
+        </div>
       </div>
       <p className="mb-4 text-[10px] text-muted-foreground">
-        All figures verbatim from {data!.company}&apos;s quarterly reports
+        All figures verbatim from {data!.company}&apos;s reports
         (latest uploaded {latest.uploaded}). Hover a metric for its source sentence.
+        {view === "quarterly" && " Quarterly view shows each quarter's latest report (values as of quarter end); % changes are quarter-over-quarter."}
       </p>
 
       {/* Stat cards */}
@@ -188,6 +227,68 @@ export function CompanyKpiDashboard({ companyName }: { companyName: string }) {
           </div>
         ))}
       </div>
+
+      {/* Quarter-over-quarter comparison — always visible, all companies */}
+      {cmpQuarters.length >= 1 && cmpKeys.length > 0 && (
+        <div className="mt-5 overflow-x-auto rounded-xl border border-border bg-background p-4">
+          <div className="mb-2 flex items-baseline justify-between">
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Quarter comparison
+            </span>
+            <span className="text-[10px] text-muted-foreground">
+              {cmpQuarters.length < 3
+                ? "More columns appear as more quarters are reported"
+                : `Last ${cmpQuarters.length} quarters`}
+            </span>
+          </div>
+          <table className="w-full text-xs">
+            <thead>
+              <tr className="border-b border-border text-left text-[10px] uppercase tracking-wider text-muted-foreground">
+                <th className="py-1.5 pr-3 font-semibold">Metric</th>
+                {cmpQuarters.map((q, i) => (
+                  <th key={q.period} className={`py-1.5 pr-3 text-right font-semibold ${
+                    i === cmpQuarters.length - 1 ? "text-foreground" : ""}`}>
+                    {q.period}
+                  </th>
+                ))}
+                {cmpQuarters.length >= 2 && (
+                  <th className="py-1.5 text-right font-semibold">Δ QoQ</th>
+                )}
+              </tr>
+            </thead>
+            <tbody>
+              {cmpKeys.map((k) => {
+                const vals = cmpQuarters.map((q) =>
+                  typeof q.kpis[k]?.value === "number" ? (q.kpis[k]!.value as number) : null);
+                const label = cmpQuarters.map((q) => q.kpis[k]?.label).find(Boolean) ?? k;
+                const cur = vals[vals.length - 1];
+                const prv = vals.length >= 2 ? vals[vals.length - 2] : null;
+                const d = cur != null && prv != null ? delta(cur, prv) : null;
+                const currency = cmpQuarters.map((q) => q.kpis[k]?.currency).find(Boolean) ?? null;
+                return (
+                  <tr key={k} className="border-b border-border/50 last:border-0">
+                    <td className="py-2 pr-3 text-muted-foreground">{label}</td>
+                    {vals.map((v, i) => (
+                      <td key={i}
+                        title={cmpQuarters[i].kpis[k]?.source_text ?? undefined}
+                        className={`cursor-help py-2 pr-3 text-right tabular-nums ${
+                          i === vals.length - 1 ? "font-bold" : ""}`}>
+                        {v != null ? fmtNum(v, currency) : "—"}
+                      </td>
+                    ))}
+                    {cmpQuarters.length >= 2 && (
+                      <td className={`py-2 text-right font-semibold ${
+                        d?.startsWith("+") ? "text-emerald-600" : d ? "text-red-500" : "text-muted-foreground"}`}>
+                        {d ?? "—"}
+                      </td>
+                    )}
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       {/* Big quarterly area chart (primary money KPI) */}
       {primaryKey && primarySeries.length >= 2 && (
