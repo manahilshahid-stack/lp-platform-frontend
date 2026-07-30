@@ -1,7 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { api, streamChat } from "@/lib/api/backend";
-import { CompanyKpiDashboard } from "@/components/CompanyKpiDashboard";
 import { useProfile, type ChatMessage } from "@/lib/store";
 import {
   ArrowLeft, Send, Sparkles, Mail, TrendingUp, Users,
@@ -214,9 +213,6 @@ function CompanyPage() {
       {/* Body: content + chat */}
       <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_400px]">
         <div className="space-y-5">
-          {/* Real-data KPI dashboard — renders only when report KPIs exist */}
-          <CompanyKpiDashboard companyName={company.name} />
-
           <Section icon={Info} title="About">
             <p className="text-sm leading-relaxed text-foreground/90">{about}</p>
           </Section>
