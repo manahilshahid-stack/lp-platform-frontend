@@ -4,7 +4,6 @@ import { useProfile, type ChatMessage } from "@/lib/store";
 import { Send, Mail, SquarePen } from "lucide-react";
 import { toast } from "sonner";
 import { api, streamChat } from "@/lib/api/backend";
-import { KpiPanel } from "@/components/KpiPanel";
 
 export const Route = createFileRoute("/_app/chat")({
   head: () => ({
@@ -152,8 +151,7 @@ function ChatPage() {
   };
 
   return (
-    <div className="mx-auto flex h-[calc(100vh-4rem)] max-w-6xl justify-center gap-6 px-6 py-6">
-    <div className="flex h-full w-full min-w-0 max-w-3xl flex-col">
+    <div className="mx-auto flex h-[calc(100vh-4rem)] max-w-3xl flex-col px-6 py-6">
       {/* Header */}
       <div className="mb-4 flex items-center justify-between gap-4">
         <div>
@@ -257,10 +255,6 @@ function ChatPage() {
           <Send className="h-4 w-4" />
         </button>
       </form>
-    </div>
-
-    {/* KPI dashboard — numbers verbatim from quarterly reports, live-updating */}
-    <KpiPanel />
     </div>
   );
 }
