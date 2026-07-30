@@ -25,7 +25,8 @@ type Kpi = {
 type Period = {
   period: string | null;
   year: number;
-  quarter: number;
+  quarter: number | null;   // set for quarterly reports
+  month?: number | null;    // set for monthly reports (e.g. "2024-10")
   uploaded: string;
   kpis: Record<string, Kpi>;
 };
@@ -153,7 +154,9 @@ export function CompanyKpiDashboard({ companyName }: { companyName: string }) {
         <BarChart3 className="h-4 w-4 text-muted-foreground" />
         <h2 className="text-sm font-bold uppercase tracking-wider">Performance dashboard</h2>
         <span className="ml-auto text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-          {periods.length > 1 ? `Last ${periods.length} quarters` : `As reported for ${latest.period}`}
+          {periods.length > 1
+            ? `Last ${periods.length} ${periods.some((p) => p.month) ? "reports" : "quarters"}`
+            : `As reported for ${latest.period}`}
         </span>
       </div>
       <p className="mb-4 text-[10px] text-muted-foreground">
