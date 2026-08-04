@@ -4,7 +4,7 @@ import { api, streamChat } from "@/lib/api/backend";
 import { useProfile, type ChatMessage } from "@/lib/store";
 import {
   ArrowLeft, Send, Sparkles, Mail, TrendingUp, Users,
-  ExternalLink, Building2, Handshake, Activity, Info, MessageSquare,
+  ExternalLink, Building2, Handshake, Activity, Info, MessageSquare, RotateCcw,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -57,16 +57,48 @@ function CompanyPage() {
   const [streamingText, setStreamingText] = useState("");
   const scroller = useRef<HTMLDivElement>(null);
 
-  // Reset chat when company loads
+  const greeting = (c: Company): ChatMessage => ({
+    role: "assistant",
+    ts: Date.now(),
+    content: `Hi${profile?.name ? " " + profile.name.split(" ")[0] : ""} — I'm focused exclusively on **${c.name}**. Ask me about their product, market, differentiation, or thesis. For broader portfolio questions, use the main AI Analyst.`,
+  });
+
+  // Restore this company's chat on load — survives refresh until "New chat"
   useEffect(() => {
     if (!company) return;
-    setMessages([{
-      role: "assistant",
-      ts: Date.now(),
-      content: `Hi${profile?.name ? " " + profile.name.split(" ")[0] : ""} — I'm focused exclusively on **${company.name}**. Ask me about their product, market, differentiation, or thesis. For broader portfolio questions, use the main AI Analyst.`,
-    }]);
+    try {
+      const saved = localStorage.getItem(`mx-company-chat-${company.id}`);
+      if (saved) {
+        const data = JSON.parse(saved);
+        if (Array.isArray(data.messages) && data.messages.length > 0) {
+          setMessages(data.messages);
+          setSessionId(data.sessionId ?? null);
+          return;
+        }
+      }
+    } catch { /* corrupted saved state — start fresh */ }
+    setMessages([greeting(company)]);
     setSessionId(null);
   }, [company?.id]);
+
+  // Persist after every completed exchange
+  useEffect(() => {
+    if (!company || messages.length === 0) return;
+    try {
+      localStorage.setItem(
+        `mx-company-chat-${company.id}`,
+        JSON.stringify({ messages, sessionId }),
+      );
+    } catch { /* storage unavailable/full — chat still works, just won't persist */ }
+  }, [messages, sessionId, company?.id]);
+
+  const newChat = () => {
+    if (!company) return;
+    try { localStorage.removeItem(`mx-company-chat-${company.id}`); } catch { /* ignore */ }
+    setMessages([greeting(company)]);
+    setSessionId(null);
+    setInput("");
+  };
 
   useEffect(() => {
     scroller.current?.scrollTo({ top: scroller.current.scrollHeight, behavior: "smooth" });
@@ -256,10 +288,16 @@ function CompanyPage() {
                 </div>
                 <div className="text-sm font-semibold">Ask about {company.name}</div>
               </div>
-              <button onClick={emailSummary} disabled={emailing}
-                className="flex items-center gap-1.5 rounded-full bg-primary px-3 py-1.5 text-[11px] font-semibold text-primary-foreground transition hover:opacity-90 disabled:opacity-50">
-                <Mail className="h-3 w-3" /> {emailing ? 'Sending...' : 'Email summary'}
-              </button>
+              <div className="flex items-center gap-1.5">
+                <button onClick={newChat} disabled={thinking} title="Start a new conversation"
+                  className="flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-[11px] font-semibold transition hover:border-foreground/30 hover:bg-secondary disabled:opacity-50">
+                  <RotateCcw className="h-3 w-3" /> New chat
+                </button>
+                <button onClick={emailSummary} disabled={emailing}
+                  className="flex items-center gap-1.5 rounded-full bg-primary px-3 py-1.5 text-[11px] font-semibold text-primary-foreground transition hover:opacity-90 disabled:opacity-50">
+                  <Mail className="h-3 w-3" /> {emailing ? 'Sending...' : 'Email summary'}
+                </button>
+              </div>
             </div>
 
             <div ref={scroller} className="flex-1 space-y-4 overflow-y-auto px-4 py-5">
