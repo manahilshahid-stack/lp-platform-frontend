@@ -24,9 +24,29 @@ export async function api<T = unknown>(
   });
   if (!res.ok) {
     const detail = typeof res.body === "string" ? res.body : JSON.stringify(res.body);
-    throw new Error(`Backend ${res.status}: ${detail}`);
+    const at = (res as { url?: string }).url ? ` @ ${(res as { url?: string }).url}` : "";
+    throw new Error(`Backend ${res.status}${at}: ${detail}`);
   }
   return res.body as T;
+}
+
+/**
+ * Direct browser → Railway call (same route the chat stream uses, bypassing
+ * the CF Worker proxy). Use for simple GETs like the home page feeds.
+ */
+export async function apiDirect<T = unknown>(path: string): Promise<T> {
+  const token = getToken();
+  const res = await fetch(`${RAILWAY_URL}${path}`, {
+    headers: {
+      Accept: "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+  if (!res.ok) {
+    const detail = await res.text().catch(() => "");
+    throw new Error(`Backend ${res.status} @ ${RAILWAY_URL}${path}: ${detail.slice(0, 200)}`);
+  }
+  return (await res.json()) as T;
 }
 
 export type StreamEvent =

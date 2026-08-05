@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { api } from "@/lib/api/backend";
+import { apiDirect } from "@/lib/api/backend";
 import { useProfile } from "@/lib/store";
 import {
   ArrowUpRight, CalendarDays, ExternalLink, LayoutGrid, MapPin,
@@ -148,11 +148,11 @@ function LiveFeeds() {
   const [feedError, setFeedError] = useState<string | null>(null);
 
   useEffect(() => {
-    api<EventsResponse>("/api/lp/events?limit=3").then(setEvents).catch((e) => {
+    apiDirect<EventsResponse>("/api/lp/events?limit=3").then(setEvents).catch((e) => {
       console.error("events feed failed:", e);
       setFeedError((e as Error)?.message ?? String(e));
     });
-    api<NewsResponse>("/api/lp/news?limit=5").then((n) => {
+    apiDirect<NewsResponse>("/api/lp/news?limit=5").then((n) => {
       setNews(n);
       // open the first tab that actually has content
       const first = NEWS_TABS.find((t) => n[t.key]?.length);

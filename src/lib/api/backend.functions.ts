@@ -20,7 +20,7 @@ const requestSchema = z.object({
 
 export const callBackend = createServerFn({ method: "POST" })
   .inputValidator((input) => requestSchema.parse(input))
-  .handler(async ({ data }): Promise<{ ok: boolean; status: number; body: JsonValue }> => {
+  .handler(async ({ data }): Promise<{ ok: boolean; status: number; body: JsonValue; url?: string }> => {
     const url = new URL(data.path.replace(/^\//, ""), BASE().replace(/\/?$/, "/"));
     if (data.query) {
       for (const [k, v] of Object.entries(data.query)) url.searchParams.set(k, v);
@@ -40,5 +40,7 @@ export const callBackend = createServerFn({ method: "POST" })
     let body: JsonValue = text;
     try { body = JSON.parse(text) as JsonValue; } catch { /* keep as text */ }
 
-    return { ok: res.ok, status: res.status, body };
+    // url included so client-side errors can show exactly which backend URL
+    // was called — critical for diagnosing proxy/env mismatches in production.
+    return { ok: res.ok, status: res.status, body, url: url.toString() };
   });
