@@ -36,7 +36,11 @@ export async function api<T = unknown>(
  */
 export async function apiDirect<T = unknown>(path: string): Promise<T> {
   const token = getToken();
-  const res = await fetch(`${RAILWAY_URL}${path}`, {
+  // cache: "no-store" + timestamp — Safari aggressively caches JSON GETs,
+  // and a cached error response would otherwise replay forever.
+  const sep = path.includes("?") ? "&" : "?";
+  const res = await fetch(`${RAILWAY_URL}${path}${sep}_ts=${Date.now()}`, {
+    cache: "no-store",
     headers: {
       Accept: "application/json",
       ...(token ? { Authorization: `Bearer ${token}` } : {}),

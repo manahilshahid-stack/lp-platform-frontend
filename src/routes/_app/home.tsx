@@ -121,7 +121,8 @@ type FeedEvent = {
 };
 type NewsEntry = {
   id: number; title: string; url: string; source: string | null;
-  company: string | null; category: string; published_at: string | null;
+  company: string | null; category: string; image_url: string | null;
+  published_at: string | null;
 };
 type EventsResponse = { calendar_url: string | null; events: FeedEvent[] };
 type NewsResponse = { highlight: NewsEntry | null; funding: NewsEntry[]; press: NewsEntry[]; merantix: NewsEntry[] };
@@ -199,10 +200,10 @@ function LiveFeeds() {
         </a>
       )}
 
-      <section className="grid gap-4 lg:grid-cols-[1fr_1.6fr]">
+      <section className={`grid gap-4 ${hasEvents && hasNews ? "lg:grid-cols-2" : ""}`}>
         {/* Upcoming events */}
         {hasEvents && (
-          <div className="rounded-3xl border border-border bg-card p-6">
+          <div className="flex min-h-[26rem] flex-col rounded-3xl border border-border bg-card p-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
                 <div className="grid h-9 w-9 place-items-center rounded-xl bg-secondary">
@@ -212,24 +213,37 @@ function LiveFeeds() {
               </div>
               {events?.calendar_url && (
                 <a href={events.calendar_url} target="_blank" rel="noreferrer"
-                  className="text-[11px] font-semibold text-muted-foreground transition hover:text-foreground">
-                  View all →
+                  className="inline-flex items-center gap-1 rounded-full border border-border px-3 py-1 text-[11px] font-semibold text-muted-foreground transition hover:border-foreground/30 hover:text-foreground">
+                  View all <ExternalLink className="h-3 w-3" />
                 </a>
               )}
             </div>
-            <div className="mt-4 space-y-2.5">
+            <div className="mt-4 flex-1 space-y-3">
               {events!.events.map((e) => (
                 <a key={e.id} href={e.url ?? events?.calendar_url ?? "#"} target="_blank" rel="noreferrer"
-                  className="group block rounded-xl border border-border bg-background/60 px-4 py-3 transition hover:border-foreground/30">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="truncate text-sm font-semibold">{e.name}</span>
-                    <ExternalLink className="h-3 w-3 flex-shrink-0 text-muted-foreground" />
-                  </div>
-                  <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-muted-foreground">
-                    <span>{fmtDate(e.starts_at, true)}</span>
-                    {e.location && (
-                      <span className="inline-flex items-center gap-1"><MapPin className="h-3 w-3" />{e.location}</span>
-                    )}
+                  className="group flex items-center gap-4 rounded-2xl border border-border bg-background/60 p-3 transition hover:-translate-y-0.5 hover:border-foreground/30 hover:shadow-elegant">
+                  {e.cover_url ? (
+                    <img src={e.cover_url} alt="" loading="lazy"
+                      className="h-16 w-16 flex-shrink-0 rounded-xl border border-border object-cover" />
+                  ) : (
+                    <div className="grid h-16 w-16 flex-shrink-0 place-items-center rounded-xl bg-secondary">
+                      <CalendarDays className="h-5 w-5 text-muted-foreground" />
+                    </div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-start justify-between gap-2">
+                      <span className="text-sm font-semibold leading-snug"
+                        style={{ display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                        {e.name}
+                      </span>
+                      <ExternalLink className="mt-0.5 h-3 w-3 flex-shrink-0 text-muted-foreground transition group-hover:text-foreground" />
+                    </div>
+                    <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-muted-foreground">
+                      <span className="font-medium">{fmtDate(e.starts_at, true)}</span>
+                      {e.location && (
+                        <span className="inline-flex items-center gap-1 truncate"><MapPin className="h-3 w-3 flex-shrink-0" />{e.location}</span>
+                      )}
+                    </div>
                   </div>
                 </a>
               ))}
@@ -239,7 +253,7 @@ function LiveFeeds() {
 
         {/* News tabs */}
         {hasNews && (
-          <div className={`rounded-3xl border border-border bg-card p-6 ${hasEvents ? "" : "lg:col-span-2"}`}>
+          <div className="flex min-h-[26rem] flex-col rounded-3xl border border-border bg-card p-6">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-2.5">
                 <div className="grid h-9 w-9 place-items-center rounded-xl bg-secondary">
@@ -258,20 +272,39 @@ function LiveFeeds() {
                 ))}
               </div>
             </div>
-            <div className="mt-4 space-y-2">
+            <div className="mt-4 flex-1 space-y-3">
               {(news![tab] ?? []).length === 0 && (
-                <p className="px-1 py-4 text-sm text-muted-foreground">Nothing here yet.</p>
+                <div className="grid h-full place-items-center py-10 text-center">
+                  <div>
+                    <Newspaper className="mx-auto h-6 w-6 text-muted-foreground/50" />
+                    <p className="mt-2 text-sm text-muted-foreground">Nothing in {NEWS_TABS.find((t) => t.key === tab)?.label} yet.</p>
+                  </div>
+                </div>
               )}
               {(news![tab] ?? []).map((n) => (
                 <a key={n.id} href={n.url} target="_blank" rel="noreferrer"
-                  className="group flex items-start justify-between gap-3 rounded-xl border border-border bg-background/60 px-4 py-3 transition hover:border-foreground/30">
-                  <div className="min-w-0">
-                    <div className="truncate text-sm font-medium">{n.title}</div>
-                    <div className="mt-0.5 text-[11px] text-muted-foreground">
+                  className="group flex items-center gap-4 rounded-2xl border border-border bg-background/60 p-3 transition hover:-translate-y-0.5 hover:border-foreground/30 hover:shadow-elegant">
+                  {n.image_url ? (
+                    <img src={n.image_url} alt="" loading="lazy"
+                      className="h-16 w-16 flex-shrink-0 rounded-xl border border-border object-cover"
+                      onError={(ev) => { (ev.target as HTMLImageElement).style.display = "none"; }} />
+                  ) : (
+                    <div className="grid h-16 w-16 flex-shrink-0 place-items-center rounded-xl bg-secondary font-display text-lg font-bold text-muted-foreground">
+                      {(n.source ?? n.company ?? "N")[0].toUpperCase()}
+                    </div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-start justify-between gap-2">
+                      <span className="text-sm font-semibold leading-snug"
+                        style={{ display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                        {n.title}
+                      </span>
+                      <ExternalLink className="mt-0.5 h-3 w-3 flex-shrink-0 text-muted-foreground transition group-hover:text-foreground" />
+                    </div>
+                    <div className="mt-1 truncate text-[11px] text-muted-foreground">
                       {[n.company, n.source, fmtDate(n.published_at)].filter(Boolean).join(" · ")}
                     </div>
                   </div>
-                  <ExternalLink className="mt-1 h-3 w-3 flex-shrink-0 text-muted-foreground" />
                 </a>
               ))}
             </div>
