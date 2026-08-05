@@ -145,20 +145,38 @@ function LiveFeeds() {
   const [events, setEvents] = useState<EventsResponse | null>(null);
   const [news, setNews] = useState<NewsResponse | null>(null);
   const [tab, setTab] = useState<"funding" | "press" | "merantix">("funding");
+  const [feedError, setFeedError] = useState<string | null>(null);
 
   useEffect(() => {
-    api<EventsResponse>("/api/lp/events?limit=3").then(setEvents).catch(() => setEvents(null));
+    api<EventsResponse>("/api/lp/events?limit=3").then(setEvents).catch((e) => {
+      console.error("events feed failed:", e);
+      setFeedError((e as Error)?.message ?? String(e));
+    });
     api<NewsResponse>("/api/lp/news?limit=5").then((n) => {
       setNews(n);
       // open the first tab that actually has content
       const first = NEWS_TABS.find((t) => n[t.key]?.length);
       if (first) setTab(first.key);
-    }).catch(() => setNews(null));
+    }).catch((e) => {
+      console.error("news feed failed:", e);
+      setFeedError((e as Error)?.message ?? String(e));
+    });
   }, []);
 
   const hasEvents = !!events?.events?.length;
   const hasNews = !!news && NEWS_TABS.some((t) => news[t.key]?.length);
-  if (!hasEvents && !hasNews && !news?.highlight) return null; // nothing yet — keep the page clean
+  if (!hasEvents && !hasNews && !news?.highlight) {
+    // Distinguish "nothing published yet" (stay invisible) from "request
+    // failed" (show a small diagnostic so failures are never silent).
+    if (!feedError) return null;
+    return (
+      <section className="rounded-3xl border border-border bg-card px-6 py-4">
+        <p className="text-xs text-muted-foreground">
+          News &amp; events feed couldn't load — <span className="font-mono">{feedError.slice(0, 200)}</span>
+        </p>
+      </section>
+    );
+  }
 
   return (
     <div className="space-y-4">
