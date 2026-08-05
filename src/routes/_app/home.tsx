@@ -125,11 +125,11 @@ type NewsEntry = {
   published_at: string | null;
 };
 type EventsResponse = { calendar_url: string | null; events: FeedEvent[] };
-type NewsResponse = { highlight: NewsEntry | null; funding: NewsEntry[]; press: NewsEntry[]; merantix: NewsEntry[] };
+type NewsResponse = { highlight: NewsEntry | null; funding: NewsEntry[]; portfolio: NewsEntry[]; merantix: NewsEntry[] };
 
 const NEWS_TABS = [
   { key: "funding" as const, label: "Funding" },
-  { key: "press" as const, label: "Press" },
+  { key: "portfolio" as const, label: "Portfolio" },
   { key: "merantix" as const, label: "Merantix" },
 ];
 
@@ -145,7 +145,7 @@ function fmtDate(iso: string | null, withTime = false) {
 function LiveFeeds() {
   const [events, setEvents] = useState<EventsResponse | null>(null);
   const [news, setNews] = useState<NewsResponse | null>(null);
-  const [tab, setTab] = useState<"funding" | "press" | "merantix">("funding");
+  const [tab, setTab] = useState<"funding" | "portfolio" | "merantix">("funding");
   const [feedError, setFeedError] = useState<string | null>(null);
 
   useEffect(() => {
