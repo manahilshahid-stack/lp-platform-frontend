@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api/backend";
 import { ArrowUpRight, Compass, Search } from "lucide-react";
+import { track } from "@/lib/analytics";
 
 export const Route = createFileRoute("/_app/portfolio/")({
   head: () => ({
@@ -91,6 +92,7 @@ function PortfolioHub() {
               key={s.slug}
               to="/portfolio/$sector"
               params={{ sector: s.slug }}
+              onClick={() => track("feature_click", "sector_card", { sector: s.name, company_count: s.company_count })}
               className="group relative rounded-2xl border border-border bg-card p-5 transition hover:border-foreground/40 hover:shadow-elegant"
             >
               <div className="flex items-start justify-between gap-2">

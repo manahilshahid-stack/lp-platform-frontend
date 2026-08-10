@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { api } from "@/lib/api/backend";
 import { ArrowUpRight, Search } from "lucide-react";
+import { track } from "@/lib/analytics";
 
 export const Route = createFileRoute("/_app/companies")({
   head: () => ({
@@ -27,6 +28,15 @@ type Company = {
 
 function CompaniesIndex() {
   const [q, setQ] = useState("");
+  const searchDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const trackSearch = (value: string) => {
+    if (searchDebounce.current) clearTimeout(searchDebounce.current);
+    searchDebounce.current = setTimeout(() => {
+      if (value.trim().length >= 2) {
+        track("search", "companies_search", { query_length: value.trim().length });
+      }
+    }, 800);
+  };
   const [status, setStatus] = useState<"All" | "Active" | "Exited" | "Stealth">("All");
   const [companies, setCompanies] = useState<Company[]>([]);
   const [loading, setLoading] = useState(true);
@@ -64,7 +74,7 @@ function CompaniesIndex() {
       <div className="flex flex-wrap items-center gap-3">
         <div className="relative max-w-sm flex-1">
           <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search by name, sector or focus…"
+          <input value={q} onChange={(e) => { setQ(e.target.value); trackSearch(e.target.value); }} placeholder="Search by name, sector or focus…"
             className="w-full rounded-full border border-border bg-card py-2.5 pl-9 pr-4 text-sm outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/30" />
         </div>
         <div className="flex items-center gap-1.5">

@@ -4,6 +4,7 @@ import { useProfile, type ChatMessage } from "@/lib/store";
 import { Send, Mail, SquarePen } from "lucide-react";
 import { toast } from "sonner";
 import { api, streamChat } from "@/lib/api/backend";
+import { track } from "@/lib/analytics";
 
 export const Route = createFileRoute("/_app/chat")({
   head: () => ({
@@ -104,12 +105,23 @@ function ChatPage() {
     setThinking(true);
     setStreamingText("");
     setStatusText("");
+    // Track message (length + index only — no content stored)
+    track("chat_message", "general_chat", {
+      context: "portfolio_chat",
+      query_length: text.trim().length,
+      message_index: next.filter(m => m.role === "user").length,
+      has_session: !!currentSessionId,
+    });
 
     let accumulated = "";
     let messageId: number | undefined;
     try {
       for await (const event of streamChat(text, currentSessionId)) {
         if (event.type === "session") {
+          // Track new session start
+          if (!currentSessionId) {
+            track("chat_session_start", "general_chat", { session_id: event.session_id });
+          }
           setCurrentSessionId(event.session_id);
           localStorage.setItem(LAST_SESSION_KEY, event.session_id);
           window.history.replaceState({}, "", `/chat?session=${event.session_id}`);
@@ -232,7 +244,10 @@ function ChatPage() {
                 <div className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Try asking</div>
                 <div className="flex flex-wrap gap-1.5">
                   {SUGGESTED.map((s) => (
-                    <button key={s} onClick={() => send(s)}
+                    <button key={s} onClick={() => {
+                      track("feature_click", "suggested_question", { query_length: s.length });
+                      send(s);
+                    }}
                       className="rounded-full border border-border bg-background px-3 py-1.5 text-xs transition hover:border-foreground/30 hover:bg-secondary">
                       {s}
                     </button>

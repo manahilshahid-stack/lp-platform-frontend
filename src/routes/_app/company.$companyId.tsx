@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { api, streamChat } from "@/lib/api/backend";
 import { useProfile, type ChatMessage } from "@/lib/store";
+import { track } from "@/lib/analytics";
 import {
   ArrowLeft, Send, Sparkles, Mail, TrendingUp, Users,
   ExternalLink, Building2, Handshake, Activity, Info, MessageSquare, RotateCcw,
@@ -43,7 +44,15 @@ function CompanyPage() {
     setLoading(true);
     setNotFound(false);
     api<Company>(`/api/lp/companies/${companyId}`)
-      .then(setCompany)
+      .then((c) => {
+        setCompany(c);
+        track("company_view", c.name?.toLowerCase().replace(/\s+/g, "_") ?? companyId, {
+          company_id: companyId,
+          company_name: c.name,
+          sector: c.category,
+          stage: c.stage,
+        });
+      })
       .catch(() => setNotFound(true))
       .finally(() => setLoading(false));
   }, [companyId]);
@@ -112,6 +121,13 @@ function CompanyPage() {
     setInput("");
     setThinking(true);
     setStreamingText("");
+    // Track the message (length only — no content)
+    track("chat_message", company.name?.toLowerCase().replace(/\s+/g, "_"), {
+      context: "company_chat",
+      company_name: company.name,
+      query_length: text.trim().length,
+      message_index: next.filter(m => m.role === "user").length,
+    });
 
     let accumulated = "";
     try {
