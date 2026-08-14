@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { api } from "@/lib/api/backend";
+import { api, SessionExpiredError } from "@/lib/api/backend";
 import { MessageSquare, ArrowUpRight, Trash2 } from "lucide-react";
 
 export const Route = createFileRoute("/_app/history")({
@@ -29,7 +29,7 @@ function HistoryPage() {
   useEffect(() => {
     api<ChatSession[]>("/api/lp/chat/sessions")
       .then((data) => setSessions(data))
-      .catch(console.error)
+      .catch((e) => { if (!(e instanceof SessionExpiredError)) console.error(e); })
       .finally(() => setLoading(false));
   }, []);
 
@@ -41,8 +41,8 @@ function HistoryPage() {
     try {
       await api(`/api/lp/chat/sessions/${id}`, { method: "DELETE" });
       setSessions((prev) => prev.filter((s) => s.id !== id));
-    } catch {
-      alert("Failed to delete. Please try again.");
+    } catch (e) {
+      if (!(e instanceof SessionExpiredError)) alert("Failed to delete. Please try again.");
     } finally {
       setDeleting(null);
     }

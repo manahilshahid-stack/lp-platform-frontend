@@ -4,7 +4,7 @@ import { CATEGORIES } from "@/lib/mockData";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Camera, Check } from "lucide-react";
-import { api } from "@/lib/api/backend";
+import { api, SessionExpiredError } from "@/lib/api/backend";
 
 export const Route = createFileRoute("/_app/profile")({
   head: () => ({
@@ -99,7 +99,11 @@ function ProfilePage() {
         onboarding_completed: true,
         avatar: avatar ?? null,
       },
-    }).catch(console.error);
+    }).catch((e) => {
+      if (e instanceof SessionExpiredError) return;
+      console.error(e);
+      toast.error("Failed to save profile. Please try again.");
+    });
     toast.success("Profile updated");
   };
 

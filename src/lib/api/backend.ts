@@ -1,5 +1,44 @@
 import { callBackend } from "./backend.functions";
-import { getToken } from "@/lib/store";
+import { getToken, clearToken, clearProfile } from "@/lib/store";
+
+// ---------------------------------------------------------------------------
+// Session expiry handling
+// ---------------------------------------------------------------------------
+
+/**
+ * Thrown when the backend returns 401. Callers should catch this and stay
+ * silent — the user is already being redirected to the login page.
+ */
+export class SessionExpiredError extends Error {
+  constructor() {
+    super("session_expired");
+    this.name = "SessionExpiredError";
+  }
+}
+
+/**
+ * Called on any 401 response. Wipes auth state and hard-redirects to login.
+ * Returns `never` — always throws after scheduling the redirect.
+ */
+function handle401(): never {
+  if (typeof window !== "undefined") {
+    clearToken();
+    clearProfile();
+    window.location.href = "/auth/login";
+  }
+  throw new SessionExpiredError();
+}
+
+/**
+ * Converts a non-401 HTTP error status into a user-friendly message.
+ * Never exposes raw status codes, URLs, or JSON bodies.
+ */
+function friendlyError(status: number): string {
+  if (status >= 500) return "Something went wrong on our end. Please try again in a moment.";
+  if (status === 403) return "You don't have permission to view this.";
+  if (status === 404) return "That content couldn't be found.";
+  return "Something went wrong. Please try again.";
+}
 
 // Railway base URL — used directly for streaming (bypasses CF Worker proxy)
 const RAILWAY_URL =
@@ -23,9 +62,8 @@ export async function api<T = unknown>(
     data: { path, method: opts.method ?? "GET", body: opts.body, query: opts.query, token },
   });
   if (!res.ok) {
-    const detail = typeof res.body === "string" ? res.body : JSON.stringify(res.body);
-    const at = (res as { url?: string }).url ? ` @ ${(res as { url?: string }).url}` : "";
-    throw new Error(`Backend ${res.status}${at}: ${detail}`);
+    if (res.status === 401) handle401();
+    throw new Error(friendlyError(res.status));
   }
   return res.body as T;
 }
@@ -47,8 +85,8 @@ export async function apiDirect<T = unknown>(path: string): Promise<T> {
     },
   });
   if (!res.ok) {
-    const detail = await res.text().catch(() => "");
-    throw new Error(`Backend ${res.status} @ ${RAILWAY_URL}${path}: ${detail.slice(0, 200)}`);
+    if (res.status === 401) handle401();
+    throw new Error(friendlyError(res.status));
   }
   return (await res.json()) as T;
 }
@@ -86,7 +124,8 @@ export async function* streamChat(
   });
 
   if (!response.ok) {
-    throw new Error(`Backend ${response.status}`);
+    if (response.status === 401) handle401();
+    throw new Error(friendlyError(response.status));
   }
 
   const reader = response.body!.getReader();

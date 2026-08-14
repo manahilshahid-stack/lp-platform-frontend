@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { api, streamChat } from "@/lib/api/backend";
+import { api, streamChat, SessionExpiredError } from "@/lib/api/backend";
 import { useProfile, type ChatMessage } from "@/lib/store";
 import { track } from "@/lib/analytics";
 import {
@@ -53,7 +53,10 @@ function CompanyPage() {
           stage: c.stage,
         });
       })
-      .catch(() => setNotFound(true))
+      .catch((e) => {
+        if (e instanceof SessionExpiredError) return;
+        setNotFound(true);
+      })
       .finally(() => setLoading(false));
   }, [companyId]);
 
@@ -140,8 +143,9 @@ function CompanyPage() {
           setStreamingText(accumulated);
         } else if (event.type === "done") break;
       }
-    } catch {
-      accumulated = accumulated || "⚠️ Could not reach the AI analyst. Please try again.";
+    } catch (err) {
+      if (err instanceof SessionExpiredError) return;
+      accumulated = accumulated || "Something went wrong. Please try again.";
     }
     setStatusText("");
     setMessages([...next, { role: "assistant", content: accumulated, ts: Date.now() }]);

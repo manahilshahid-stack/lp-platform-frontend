@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { apiDirect } from "@/lib/api/backend";
+import { apiDirect, SessionExpiredError } from "@/lib/api/backend";
 import { useProfile } from "@/lib/store";
 import {
   ArrowUpRight, CalendarDays, ExternalLink, LayoutGrid, MapPin,
@@ -150,8 +150,9 @@ function LiveFeeds() {
 
   useEffect(() => {
     apiDirect<EventsResponse>("/api/lp/events?limit=3").then(setEvents).catch((e) => {
+      if (e instanceof SessionExpiredError) return; // redirect already in progress
       console.error("events feed failed:", e);
-      setFeedError((e as Error)?.message ?? String(e));
+      setFeedError("The feed couldn't load right now. Please refresh the page.");
     });
     apiDirect<NewsResponse>("/api/lp/news?limit=5").then((n) => {
       setNews(n);
@@ -159,8 +160,9 @@ function LiveFeeds() {
       const first = NEWS_TABS.find((t) => n[t.key]?.length);
       if (first) setTab(first.key);
     }).catch((e) => {
+      if (e instanceof SessionExpiredError) return; // redirect already in progress
       console.error("news feed failed:", e);
-      setFeedError((e as Error)?.message ?? String(e));
+      setFeedError("The feed couldn't load right now. Please refresh the page.");
     });
   }, []);
 
@@ -172,9 +174,7 @@ function LiveFeeds() {
     if (!feedError) return null;
     return (
       <section className="rounded-3xl border border-border bg-card px-6 py-4">
-        <p className="text-xs text-muted-foreground">
-          News &amp; events feed couldn't load — <span className="font-mono">{feedError.slice(0, 200)}</span>
-        </p>
+        <p className="text-xs text-muted-foreground">{feedError}</p>
       </section>
     );
   }

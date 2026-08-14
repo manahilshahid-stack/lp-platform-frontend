@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useProfile, type ChatMessage } from "@/lib/store";
 import { Send, Mail, SquarePen } from "lucide-react";
 import { toast } from "sonner";
-import { api, streamChat } from "@/lib/api/backend";
+import { api, streamChat, SessionExpiredError } from "@/lib/api/backend";
 import { track } from "@/lib/analytics";
 
 export const Route = createFileRoute("/_app/chat")({
@@ -67,7 +67,10 @@ function ChatPage() {
           localStorage.setItem(LAST_SESSION_KEY, data.id);
         }
       })
-      .catch(() => localStorage.removeItem(LAST_SESSION_KEY))
+      .catch((e) => {
+        if (e instanceof SessionExpiredError) return;
+        localStorage.removeItem(LAST_SESSION_KEY);
+      })
       .finally(() => setLoadingSession(false));
   }, []);
 
@@ -137,7 +140,8 @@ function ChatPage() {
         }
       }
     } catch (err) {
-      accumulated = accumulated || `⚠️ Error: ${err instanceof Error ? err.message : String(err)}`;
+      if (err instanceof SessionExpiredError) return; // redirect already in progress, don't update UI
+      accumulated = accumulated || "Something went wrong. Please try again.";
     }
 
     setMessages([...next, { role: "assistant", content: accumulated, ts: Date.now(), id: messageId }]);
