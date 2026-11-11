@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { api } from "@/lib/api/backend";
+import { api, ApiError } from "@/lib/api/backend";
 import { ArrowRight } from "lucide-react";
 import { AuthShell, Field } from "./auth.login";
 import { savePendingEmail } from "./auth.verify";
@@ -46,14 +46,12 @@ function RegisterPage() {
       savePendingEmail(res.email);
       navigate({ to: "/auth/verify" });
     } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      const raw = msg.replace(/^Backend \d+:\s*/, "");
-      try {
-        const parsed = JSON.parse(raw);
-        setError(parsed.detail ?? raw);
-      } catch {
-        setError(raw || "Something went wrong, please try again.");
-      }
+      // 400s carry a readable reason ("An account with this email already exists").
+      setError(
+        err instanceof ApiError && err.status === 400 && err.detail
+          ? err.detail
+          : "Something went wrong, please try again.",
+      );
     } finally {
       setLoading(false);
     }

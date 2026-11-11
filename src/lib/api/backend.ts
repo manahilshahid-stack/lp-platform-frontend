@@ -40,6 +40,29 @@ function friendlyError(status: number): string {
   return "Something went wrong. Please try again.";
 }
 
+/**
+ * Thrown for every non-OK response that is not a session expiry. `message`
+ * stays user-friendly; `status`, `code` and `detail` let callers branch on
+ * what the backend actually said. The backend sends FastAPI-style bodies:
+ * `{detail: "text"}` or `{detail: {code: "...", ...}}`.
+ */
+export class ApiError extends Error {
+  readonly status: number;
+  readonly code?: string;
+  readonly detail?: string;
+
+  constructor(status: number, body: unknown) {
+    super(friendlyError(status));
+    this.name = "ApiError";
+    this.status = status;
+    const d = body && typeof body === "object" ? (body as { detail?: unknown }).detail : undefined;
+    if (typeof d === "string") this.detail = d;
+    else if (d && typeof d === "object" && typeof (d as { code?: unknown }).code === "string") {
+      this.code = (d as { code: string }).code;
+    }
+  }
+}
+
 // Railway base URL — used directly for streaming (bypasses CF Worker proxy)
 const RAILWAY_URL =
   typeof import.meta !== "undefined" && (import.meta as any).env?.VITE_API_URL
@@ -62,8 +85,11 @@ export async function api<T = unknown>(
     data: { path, method: opts.method ?? "GET", body: opts.body, query: opts.query, token },
   });
   if (!res.ok) {
-    if (res.status === 401) handle401();
-    throw new Error(friendlyError(res.status));
+    // Only a request that carried a token can mean "session expired". A 401
+    // on an unauthenticated call (e.g. login with a wrong password) is a
+    // normal error the page must show, not a reason to redirect.
+    if (res.status === 401 && token) handle401();
+    throw new ApiError(res.status, res.body);
   }
   return res.body as T;
 }
