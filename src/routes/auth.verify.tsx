@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { saveProfile, setToken, type Profile } from "@/lib/store";
-import { api } from "@/lib/api/backend";
+import { api, ApiError } from "@/lib/api/backend";
 import { ArrowRight, Mail, RefreshCw } from "lucide-react";
 import { AuthShell } from "./auth.login";
 
@@ -48,6 +48,7 @@ function VerifyPage() {
   const [digits, setDigits] = useState<string[]>(["", "", "", "", "", ""]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [alreadyVerified, setAlreadyVerified] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
   const refs = useRef<(HTMLInputElement | null)[]>([]);
 
@@ -117,10 +118,17 @@ function VerifyPage() {
       clearPendingEmail();
       navigate({ to: res.user.onboarding_completed ? "/home" : "/onboarding" });
     } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      if (msg.includes("expired")) {
+      const apiErr = err instanceof ApiError ? err : null;
+      if (apiErr?.status === 409 && apiErr.code === "already_verified") {
+        // Verified elsewhere (another tab/device): the code is spent, log in instead.
+        clearPendingEmail();
+        setAlreadyVerified(true);
+        return;
+      }
+      const detail = apiErr?.status === 400 ? (apiErr.detail ?? "") : "";
+      if (detail.includes("expired")) {
         setError("Code has expired. Request a new one below.");
-      } else if (msg.includes("Invalid")) {
+      } else if (detail.includes("Invalid")) {
         setError("That code isn't right — double-check and try again.");
       } else {
         setError("Something went wrong. Please try again.");
@@ -150,6 +158,20 @@ function VerifyPage() {
       setError("Couldn't resend. Please wait a moment and try again.");
     }
   };
+
+  if (alreadyVerified) {
+    return (
+      <AuthShell title="Already verified" subtitle="Log in with your password to continue.">
+        <Link
+          to="/auth/login"
+          className="group flex w-full items-center justify-center gap-2 rounded-xl bg-foreground px-4 py-3.5 text-sm font-semibold text-background transition hover:opacity-90"
+        >
+          Go to login
+          <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
+        </Link>
+      </AuthShell>
+    );
+  }
 
   return (
     <AuthShell
