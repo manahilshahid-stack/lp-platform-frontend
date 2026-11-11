@@ -19,9 +19,9 @@ export default defineConfig(({ command }) => ({
         },
       },
     }),
-    // Nitro builds the Cloudflare Worker bundle — only needed at build time
+    // Nitro builds the Node server bundle (run on Railway) — only needed at build time
     ...(command === "build"
-      ? [nitro({ defaultPreset: "cloudflare-module" })]
+      ? [nitro({ defaultPreset: "node-server" })]
       : []),
     react(),
   ],
